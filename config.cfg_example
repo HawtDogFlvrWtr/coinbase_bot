@@ -1,5 +1,19 @@
 # Rename to config.cfg and update your api info below
-
 [api-config]
 api_key = XXX
 secret = XXXX
+
+[spend-config]
+# The amount in USD you're willing to use from your holdings
+spend_dollars = 1000
+
+# The percentage of the amount above that you want to spend per order
+buy_percent = 10 
+
+[bot-config]
+# risky: MACD/MACDS + RSI -or- safe: SMA Only. Suggested: risky
+risk_level = risky
+
+# The interval on the candles that signals are looked for, and how often it attempts to look. 
+# Options: 1m, 1h, 1m, 1y. Suggested: 1h
+timeframe = 1h
