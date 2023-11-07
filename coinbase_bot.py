@@ -1,6 +1,7 @@
 import argparse
 import configparser
 import datetime
+import json
 import os
 import sys
 import ccxt
@@ -29,6 +30,7 @@ risk_level = config.get('bot-config', 'risk_level')
 timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
+symbols = json.loads(config.get('bot-config', 'symbols'))
 
 max_order_amount = buy_percent / 100 * spend_dollars
 
@@ -36,8 +38,6 @@ if risk_level == 'safe':
     print("Running the bot in SMA signal mode")
 else:
     print("Running the bot in MACD/MACs + RSI mode")
-
-
 
 db = TinyDB(orders_json_filename)
 Orders = Query()
@@ -59,7 +59,6 @@ exchange = exchange_class({
 })
 
 # Configuration
-symbols = ['BTC/USD','ETH/USD','SHIB/USD', 'DOGE/USD', 'SOL/USD', 'LINK/USD', 'AAVE/USD', 'XRP/USD']
 fast_sma_period = 10
 slow_sma_period = 20
 
