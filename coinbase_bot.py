@@ -12,30 +12,30 @@ from tinydb import TinyDB, Query
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-t', '--timeframe', help="The timeframe you want to determine signals. LEAVE THIS ALONE UNLESS YOU KNOW WHAT YOU'RE DOING!", choices=['1m', '1h', '1d'], default='1h')
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
-parser.add_argument('-sa', '--safe', help='Set the backtester to safe', action='store_true')
 
 args = parser.parse_args()
-timeframe = args.timeframe
 orders_json_filename = args.orders_file
 config_file = args.config_file
-safe = args.safe
 sleep_lookup = {'1m': 61, '1h': 3601, '1d': 86401} # Added second to give the exchange time to update the candles
-spend_dollars = 1000
-buy_percent = 10
-max_order_amount = buy_percent / 100 * spend_dollars
+
 
 config = configparser.ConfigParser()
 config.read(config_file)
 api_key = config.get('api-config', 'api_key')
 secret = config.get('api-config', 'secret')
+risk_level = config.get('bot-config', 'risk_level')
+timeframe = config.get('bot-config', 'timeframe')
+spend_dollars = int(config.get('spend-config', 'spend_dollars'))
+buy_percent = int(config.get('spend-config', 'buy_percent'))
 
-if safe:
-    print("Running the bot in less risk mode")
+max_order_amount = buy_percent / 100 * spend_dollars
+
+if risk_level == 'safe':
+    print("Running the bot in SMA signal mode")
 else:
-    print("Running the bot in good risk mode")
+    print("Running the bot in MACD/MACs + RSI mode")
 
 
 
@@ -187,7 +187,7 @@ def main():
                     slow_sma_previous = df['slow_sma'].iloc[len(df) - 2]
                     last_timetamp = df['timestamp'].iloc[-1] / 1000
                     # Check for a buy signal
-                    if safe:
+                    if risk_level == 'safe':
                         # Buy Low Risk
                         if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
                             # Check for an order that fired at on the same epoch and symbol
@@ -252,12 +252,10 @@ def main():
         except ccxt.NetworkError as e:
             # do nothing and retry later...
             print(type(e).__name__, str(e))
-        #except ValueError as ve:
-        #    print("Done Backtesting")
-        #    sys.exit()
-        #except Exception as e:
-        #    # panic and halt the execution in case of any other error
-        #    print(type(e).__name__, str(e))
+        except Exception as e:
+            # panic and halt the execution in case of any other error
+            print(type(e).__name__, str(e))
+            sys.exit()
 
 
 if __name__ == "__main__":
