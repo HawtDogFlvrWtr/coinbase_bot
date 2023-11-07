@@ -64,7 +64,7 @@ slow_sma_period = 20
 
 
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
-    db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'signal_mode': signal_mode, 'buy_price': buy_price, 'sell_price': "", 'sell_delta': "", 'sell_profit': "", 'sell_time': ""})
+    db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': "", 'sell_delta': "", 'sell_profit': "", 'sell_time': ""})
 
 def update_order(symbol, sell_price, sell_delta, sell_profit, sell_time):
     db.update({'status': 'closed', 'sell_price': sell_price, 'sell_delta': sell_delta, 'sell_profit': sell_profit, 'sell_time': sell_time}, Orders.symbol == symbol)
@@ -168,6 +168,7 @@ def main():
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         try:
             if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
+                symbols = exchange.fetch_tickers()
                 for symbol in symbols:
                     df = fetch_ohlcv_data(symbol)
                     if len(df) < 1:
@@ -214,7 +215,7 @@ def main():
                             update_order(current_price, p_l_a, profit, time.time())
                     else:
                         # Buy Good Risk
-                        if macd > signal and rsi <= 30:
+                        if macd > signal and rsi <= 40:
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate(symbol, last_timetamp): 
                                 # DO BUY
@@ -224,7 +225,7 @@ def main():
                                 buy_time = time.time()
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
                         # Sell Good Risk
-                        elif macd < signal and rsi >= 70:
+                        elif macd < signal and rsi >= 60:
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
