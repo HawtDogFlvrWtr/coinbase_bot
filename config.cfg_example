@@ -17,3 +17,6 @@ risk_level = risky
 # The interval on the candles that signals are looked for, and how often it attempts to look. 
 # Options: 1m, 1h, 1m, 1y. Suggested: 1h
 timeframe = 1h
+
+# Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
+symbols: ["BTC/USD","ETH/USD","SHIB/USD","DOGE/USD","SOL/USD","LINK/USD","AAVE/USD","XRP/USD"]
