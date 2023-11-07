@@ -1,0 +1,5 @@
+# Rename to config.cfg and update your api info below
+
+[api-config]
+api_key = XXX
+secret = XXXX
