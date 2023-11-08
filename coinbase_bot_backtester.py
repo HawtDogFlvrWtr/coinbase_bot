@@ -36,9 +36,6 @@ if safe:
 else:
     print("Running the bot in good risk mode")
 
-api_key = 'jPK5x6r1qhPSIB6W'
-secret = 'yQfnT5EvjpAkSc8Wp4dGcMPrC31g0c0G'
-
 # Initialize the exchange and API keys
 exchange = ccxt.coinbase ()
 exchange_id = 'coinbase'
@@ -95,9 +92,9 @@ def main():
                 for index, row in df.iterrows():
                     prev_index = index - 1
                     macd = row['MACD_12_26_9']
-                    macd_prev = df['MACD_12_26_9'].iloc[prev_index]
+                    macd_last = df['MACD_12_26_9'].iloc[prev_index]
                     signal = row['MACDs_12_26_9']
-                    signal_prev = df['MACDs_12_26_9'].iloc[prev_index]
+                    signal_last = df['MACDs_12_26_9'].iloc[prev_index]
                     close = row['close']
                     rsi = row['RSI_14']
                     fast_sma_current = row['fast_sma']
@@ -125,11 +122,11 @@ def main():
                             #print("Selling %s for %s" % (symbol, close))
                     else:
                         # Buy Good Risk
-                        if macd > signal and rsi <= 30:
+                        if macd > signal and macd_last < signal_last and rsi < 50:
                             last_buy_price[symbol] = close
                             #print("Buying %s for %s" % (symbol, close))
                         # Sell Good Risk
-                        elif macd < signal and rsi >= 70:
+                        elif macd < signal and macd_last > signal_last and rsi > 50:
                                 if symbol not in last_buy_price:
                                     #last_buy_price[symbol] = close
                                     continue
@@ -162,10 +159,10 @@ def main():
         except ValueError as ve:
             print("Done Backtesting")
             sys.exit()
-        except Exception as e:
-            # panic and halt the execution in case of any other error
-            since_start = next_start / 1000
-            print(type(e).__name__, str(e))
+        #except Exception as e:
+        #    # panic and halt the execution in case of any other error
+        #    since_start = next_start / 1000
+        #    print(type(e).__name__, str(e))
 
 
 if __name__ == "__main__":
