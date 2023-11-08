@@ -168,7 +168,6 @@ def main():
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         try:
             if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
-                symbols = exchange.fetch_tickers()
                 for symbol in symbols:
                     df = fetch_ohlcv_data(symbol)
                     if len(df) < 1:
@@ -178,7 +177,10 @@ def main():
                     df['fast_sma'] = calculate_sma(df, fast_sma_period)
                     df['slow_sma'] = calculate_sma(df, slow_sma_period)
                     macd = df['MACD_12_26_9'].iloc[-1]
+                    macd_last = df['MACD_12_26_9'].iloc[len(df) - 2]
                     signal = df['MACDs_12_26_9'].iloc[-1]
+                    signal_last = df['MACDs_12_26_9'].iloc[len(df) - 2]
+
                     close = df['close'].iloc[-1]
                     rsi = df['RSI_14'].iloc[-1]
                     fast_sma_current = df['fast_sma'].iloc[-1]
@@ -215,7 +217,7 @@ def main():
                             update_order(current_price, p_l_a, profit, time.time())
                     else:
                         # Buy Good Risk
-                        if macd > signal and rsi <= 40:
+                        if macd > signal and macd_last < signal_last and rsi < 50:
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate(symbol, last_timetamp): 
                                 # DO BUY
@@ -225,7 +227,7 @@ def main():
                                 buy_time = time.time()
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
                         # Sell Good Risk
-                        elif macd < signal and rsi >= 60:
+                        elif macd < signal and macd_last > signal_last  and rsi > 50:
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
