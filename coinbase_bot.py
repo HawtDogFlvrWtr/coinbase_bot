@@ -9,6 +9,7 @@ import pandas as pd
 import pandas_ta as ta
 import time
 from prettytable import PrettyTable
+from requests import HTTPError
 from tinydb import TinyDB, Query
 
 
@@ -143,8 +144,10 @@ def print_orders(last_run):
             t.add_row([symbol, status, buy_price, current_price, "%s%s%s %s" % (G, round(p_l_d, 2), N, split_symbol[-1]), "%s%s%s %%" % (G, round(p_l_p, 2), N), ts])
         else:
             t.add_row([symbol, status, buy_price, current_price, "%s%s%s %s" % (R, round(p_l_d, 2), N, split_symbol[-1]), "%s%s%s %%" % (R, round(p_l_p, 2), N), ts])
-
-    os.system('clear')
+    if os.name == 'nt': # Handle windows
+        os.system('cls')
+    else:
+        os.system('clear')
     t.reversesort = True
     print(t.get_string(sortby="Order Time"))
     sum_profit = return_closed_profit()
@@ -258,6 +261,9 @@ def main():
         except ccxt.NetworkError as e:
             # do nothing and retry later...
             print(type(e).__name__, str(e))
+        except ccxt.ExchangeError as e:
+            print(type(e).__name__, str(e))
+            time.sleep(10)
         except Exception as e:
             # panic and halt the execution in case of any other error
             print(type(e).__name__, str(e))
