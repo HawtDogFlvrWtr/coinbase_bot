@@ -66,8 +66,8 @@ slow_sma_period = 20
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
     db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': "", 'sell_delta': "", 'sell_profit': "", 'sell_time': ""})
 
-def update_order(symbol, sell_price, sell_delta, sell_profit, sell_time):
-    db.update({'status': 'closed', 'sell_price': sell_price, 'sell_delta': sell_delta, 'sell_profit': sell_profit, 'sell_time': sell_time}, Orders.symbol == symbol)
+def update_order(id, sell_price, sell_delta, sell_profit, sell_time):
+    db.update({'status': 'closed', 'sell_price': sell_price, 'sell_delta': sell_delta, 'sell_profit': sell_profit, 'sell_time': sell_time}, doc_id=id)
 
 def search_open_order(symbol):
     results = db.search(Orders.symbol == symbol)
@@ -208,13 +208,15 @@ def main():
                             # DO SELL
                             ticker = exchange.fetch_ticker(symbol)
                             current_price = ticker['last']
-                            buy_order = search_order(symbol)
-                            buy_price = buy_order['buy_price']
-                            buy_amount = buy_order['buy_amount']
-                            p_l_a = (current_price - buy_price)
-                            p_l_p = 100 * p_l_a / ((close + buy_price) / 2)
-                            profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                            update_order(current_price, p_l_a, profit, time.time())
+                            buy_orders = search_order(symbol)
+                            for buy_order in buy_orders:
+                                id = buy_order['doc_id']
+                                buy_price = buy_order['buy_price']
+                                buy_amount = buy_order['buy_amount']
+                                p_l_a = (current_price - buy_price)
+                                p_l_p = 100 * p_l_a / ((close + buy_price) / 2)
+                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                update_order(id, current_price, p_l_a, profit, time.time())
                     else:
                         # Buy Good Risk
                         if macd > signal and macd_last < signal_last and rsi < 50:
@@ -233,12 +235,14 @@ def main():
                                 continue
                             ticker = exchange.fetch_ticker(symbol)
                             current_price = ticker['last']
-                            buy_order = search_order(symbol)
-                            buy_price = buy_order['buy_price']
-                            buy_amount = buy_order['buy_amount']
-                            p_l_a = (current_price - buy_price)
-                            profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                            update_order(current_price, p_l_a, profit, time.time())
+                            buy_orders = search_order(symbol)
+                            for buy_order in buy_orders:
+                                id = buy_order['doc_id']
+                                buy_price = buy_order['buy_price']
+                                buy_amount = buy_order['buy_amount']
+                                p_l_a = (current_price - buy_price)
+                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                update_order(id, current_price, p_l_a, profit, time.time())
                 last_run = last_timetamp # last timestamp in the data we got
             print_orders(last_run)
             time.sleep(1)  # Sleep for timeframe
