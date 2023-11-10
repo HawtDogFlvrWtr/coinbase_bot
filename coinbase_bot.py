@@ -110,7 +110,10 @@ def ws_daemon():
                     if 'tickers' not in event:
                         continue
                     for ticker in event['tickers']:
-                        current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': time.time()}
+                        timestamp = time.time()
+                        current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': timestamp}
+                        for coin in current_prices: # Got an update from another coin so WS is still up. lets push the timestamp to everyone.
+                            current_prices[coin]['timestamp'] = timestamp
 
 # Start websocket thread
 worker = Thread(target=ws_daemon, args=())
@@ -174,7 +177,6 @@ def print_orders(last_run):
     G = "\033[0;32;40m" # GREEN
     N = "\033[0m" # Reset
     profit_list = []
-    tickers = exchange.fetch_tickers()
     order_list = return_open_orders()
     last_run = datetime.datetime.fromtimestamp(last_run).strftime('%m-%d-%Y %H:%M:%S')
     for order in order_list:
@@ -221,7 +223,6 @@ def get_current_price(symbol):
     global ws_status
     if current_prices[symbol.replace('/', '-')] and current_prices[symbol.replace('/', '-')]['timestamp'] >= time.time() - 5: # Check for fresh websocket data before using it 
         current_price = current_prices[symbol.replace('/', '-')]['price']
-        ws_status = True
     else:
         ticker = exchange.fetch_ticker(symbol)
         current_price = ticker['last']
