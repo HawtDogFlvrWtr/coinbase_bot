@@ -35,10 +35,12 @@ timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
+allow_duplicates = config.get('spend-config', 'allow_duplicates')
 current_prices = {}
 ws_status = False
 
 max_order_amount = buy_percent / 100 * spend_dollars
+max_orders = int(spend_dollars / max_order_amount)
 
 if risk_level == 'safe':
     print("Running the bot in SMA signal mode")
@@ -133,7 +135,13 @@ def search_open_order(symbol):
     else:
         return False
     
-def search_open_duplicate(symbol, timestamp):
+def open_order_count(symbol = None):
+    if not symbol:
+        return db.count()
+    else:
+        return db.count(Orders.symbol == symbol)
+    
+def search_open_duplicate_timestamp(symbol, timestamp):
     results = db.search((Orders.symbol == symbol) & (Orders.signal_time == timestamp))
     if len(results) > 0:
         return True
@@ -266,8 +274,12 @@ def main():
                     if risk_level == 'safe':
                         # Buy Low Risk
                         if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
+                            if not allow_duplicates and open_order_count(symbol) > 0: # Prevent duplicate coin
+                                continue
+                            if open_order_count() > max_orders: # Already met our max open orders
+                                continue
                             # Check for an order that fired at on the same epoch and symbol
-                            if not search_open_duplicate(symbol, last_timetamp):
+                            if not search_open_duplicate_timestamp(symbol, last_timetamp):
                                 # DO BUY
                                 current_price = get_current_price(symbol)
                                 buy_amount = max_order_amount / current_price
@@ -292,8 +304,13 @@ def main():
                     else:
                         # Buy Good Risk
                         if macd > signal and macd_last < signal_last and rsi < 50:
+                            # Prevent duplicate coin
+                            if not allow_duplicates and open_order_count(symbol) > 0: # Prevent duplicate coin
+                                continue
+                            if open_order_count() > max_orders: # Already met our max open orders
+                                continue
                             # Check for an order that fired at on the same epoch and symbol
-                            if not search_open_duplicate(symbol, last_timetamp): 
+                            if not search_open_duplicate_timestamp(symbol, last_timetamp): 
                                 # DO BUY
                                 current_price = get_current_price(symbol)
                                 buy_amount = max_order_amount / current_price
