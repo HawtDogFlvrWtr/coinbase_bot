@@ -13,7 +13,7 @@ import time
 from prettytable import PrettyTable
 from tinydb import TinyDB, Query
 from threading import Thread
-from websocket import create_connection, WebSocketConnectionClosedException
+from websocket import create_connection, WebSocketConnectionClosedException # websocket-client
 
 
 parser = argparse.ArgumentParser()
@@ -218,11 +218,14 @@ def print_orders(last_run):
 
 def get_current_price(symbol):
     global current_prices
+    global ws_status
     if current_prices[symbol.replace('/', '-')] and current_prices[symbol.replace('/', '-')]['timestamp'] >= time.time() - 5: # Check for fresh websocket data before using it 
         current_price = current_prices[symbol.replace('/', '-')]['price']
+        ws_status = True
     else:
         ticker = exchange.fetch_ticker(symbol)
         current_price = ticker['last']
+        ws_status = False
     return current_price
 
 def calculate_sma(df, period):
@@ -311,7 +314,10 @@ def main():
                                 update_order(id, current_price, p_l_a, profit, time.time())
                 last_run = last_timetamp # last timestamp in the data we got
             print_orders(last_run)
-            time.sleep(0.25)  # Sleep for timeframe
+            if ws_status:
+                time.sleep(0.25)  # Sleep for timeframe
+            else:
+                time.sleep(1)
         except ccxt.RequestTimeout as e:
             # recoverable error, do nothing and retry later
             print(type(e).__name__, str(e))
