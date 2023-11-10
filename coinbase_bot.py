@@ -1,6 +1,8 @@
 import argparse
 import configparser
 import datetime
+import hashlib
+import hmac
 import json
 import os
 import sys
@@ -9,8 +11,9 @@ import pandas as pd
 import pandas_ta as ta
 import time
 from prettytable import PrettyTable
-from requests import HTTPError
 from tinydb import TinyDB, Query
+from threading import Thread
+from websocket import create_connection, WebSocketConnectionClosedException
 
 
 parser = argparse.ArgumentParser()
@@ -32,6 +35,8 @@ timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
+current_prices = {}
+ws_status = False
 
 max_order_amount = buy_percent / 100 * spend_dollars
 
@@ -63,6 +68,54 @@ exchange = exchange_class({
 fast_sma_period = 10
 slow_sma_period = 20
 
+def ws_daemon():
+    global current_prices
+    global api_key
+    global secret
+    global ws
+    global symbols
+    global ws_status
+    channel = "ticker"
+    timestamp = str(int(time.time()))
+    product_ids = []
+    for symbol in symbols:
+        product_ids.append(symbol.replace("/", '-'))
+    product_ids_str = ",".join(product_ids)
+    while True:
+        ws_status = False
+        message = f"{timestamp}{channel}{product_ids_str}"
+        signature = hmac.new(secret.encode("utf-8"), message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+
+        ws = create_connection("wss://advanced-trade-ws.coinbase.com")
+        ws.send(
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": product_ids,
+                    "channel": channel,
+                    "api_key": api_key,
+                    "timestamp": timestamp,
+                    "signature": signature,
+                }
+            )
+        )
+        while ws.connected:
+            ws_status = True
+            data = ws.recv()
+            if data != "":
+                msg = json.loads(data)
+                if 'events' not in msg: # Because why not, Coinbase
+                    continue
+                for event in msg['events']:
+                    if 'tickers' not in event:
+                        continue
+                    for ticker in event['tickers']:
+                        current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': time.time()}
+
+# Start websocket thread
+worker = Thread(target=ws_daemon, args=())
+worker.daemon = True
+worker.start()
 
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
     db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': "", 'sell_delta': "", 'sell_profit': "", 'sell_time': ""})
@@ -114,6 +167,8 @@ def macd_signals(df, symbol):
     return df
 
 def print_orders(last_run):
+    global current_prices
+    global ws_status
     t = PrettyTable(['Symbol', 'Status', 'Buy Price', 'Current Price', 'P$', 'P%', 'Order Time'])
     R = "\033[0;31;40m" #RED
     G = "\033[0;32;40m" # GREEN
@@ -129,7 +184,7 @@ def print_orders(last_run):
         buy_amount = order['buy_amount']
         amount_spent = buy_price * buy_amount
         status = order['status']
-        current_price = tickers[symbol]['last']
+        current_price = get_current_price(symbol)
         if status == 'open':
             ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
         else:
@@ -149,7 +204,6 @@ def print_orders(last_run):
     else:
         os.system('clear')
     t.reversesort = True
-    print(t.get_string(sortby="Order Time"))
     sum_profit = return_closed_profit()
     if sum_profit > 0:
         color = G
@@ -157,7 +211,19 @@ def print_orders(last_run):
         color = R
     else:
         color = N
-    print("%s - Coinbase Advanced Trading Bot  -  Total P$: %s%s%s" % (last_run, color, round(sum_profit,2), N))
+    print("Last Check: %s - Coinbase Advanced Trading Bot  -  Total P$: %s%s%s" % (last_run, color, round(sum_profit,2), N))
+    print(t.get_string(sortby="Order Time"))
+
+    print("Websocket Up: %s" % (ws_status))
+
+def get_current_price(symbol):
+    global current_prices
+    if current_prices[symbol.replace('/', '-')] and current_prices[symbol.replace('/', '-')]['timestamp'] >= time.time() - 5: # Check for fresh websocket data before using it 
+        current_price = current_prices[symbol.replace('/', '-')]['price']
+    else:
+        ticker = exchange.fetch_ticker(symbol)
+        current_price = ticker['last']
+    return current_price
 
 def calculate_sma(df, period):
     return df['close'].rolling(window=period).mean()
@@ -191,6 +257,7 @@ def main():
                     fast_sma_previous = df['fast_sma'].iloc[len(df) - 2]
                     slow_sma_previous = df['slow_sma'].iloc[len(df) - 2]
                     last_timetamp = df['timestamp'].iloc[-1] / 1000
+
                     # Check for a buy signal
                     if risk_level == 'safe':
                         # Buy Low Risk
@@ -198,8 +265,7 @@ def main():
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate(symbol, last_timetamp):
                                 # DO BUY
-                                ticker = exchange.fetch_ticker(symbol)
-                                current_price = ticker['last']
+                                current_price = get_current_price(symbol)
                                 buy_amount = max_order_amount / current_price
                                 buy_time = time.time()
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
@@ -209,8 +275,7 @@ def main():
                             if not search_open_order(symbol):
                                 continue # No open orders for this coin
                             # DO SELL
-                            ticker = exchange.fetch_ticker(symbol)
-                            current_price = ticker['last']
+                            current_price = get_current_price(symbol)
                             buy_orders = search_order(symbol)
                             for buy_order in buy_orders:
                                 id = buy_order['doc_id']
@@ -226,8 +291,7 @@ def main():
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate(symbol, last_timetamp): 
                                 # DO BUY
-                                ticker = exchange.fetch_ticker(symbol)
-                                current_price = ticker['last']
+                                current_price = get_current_price(symbol)
                                 buy_amount = max_order_amount / current_price
                                 buy_time = time.time()
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
@@ -236,8 +300,7 @@ def main():
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
-                            ticker = exchange.fetch_ticker(symbol)
-                            current_price = ticker['last']
+                            current_price = get_current_price(symbol)
                             buy_orders = search_order(symbol)
                             for buy_order in buy_orders:
                                 id = buy_order['doc_id']
@@ -248,7 +311,7 @@ def main():
                                 update_order(id, current_price, p_l_a, profit, time.time())
                 last_run = last_timetamp # last timestamp in the data we got
             print_orders(last_run)
-            time.sleep(1)  # Sleep for timeframe
+            time.sleep(0.25)  # Sleep for timeframe
         except ccxt.RequestTimeout as e:
             # recoverable error, do nothing and retry later
             print(type(e).__name__, str(e))
@@ -264,10 +327,10 @@ def main():
         except ccxt.ExchangeError as e:
             print(type(e).__name__, str(e))
             time.sleep(10)
-        except Exception as e:
-            # panic and halt the execution in case of any other error
-            print(type(e).__name__, str(e))
-            sys.exit()
+        #except Exception as e:
+        #    # panic and halt the execution in case of any other error
+        #    print(type(e).__name__, str(e))
+        #    sys.exit()
 
 
 if __name__ == "__main__":
