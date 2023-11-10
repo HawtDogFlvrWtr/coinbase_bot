@@ -19,7 +19,7 @@ from websocket import create_connection, WebSocketConnectionClosedException # we
 parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot_bt.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
-parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1514782800)
+parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1698811200)
 parser.add_argument('-rb', '--rsi_buy_lt', help="The start time for backtesting", type=int, default=50)
 parser.add_argument('-rs', '--rsi_sell_gt', help="The start time for backtesting", type=int, default=50)
 parser.add_argument('-t', '--take_profit', help="The start time for backtesting", type=int, default=5)
