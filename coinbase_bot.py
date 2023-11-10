@@ -36,7 +36,7 @@ spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
 stoploss_percent = -abs(int(json.loads(config.get('bot-config', 'stoploss_percent'))))
-take_profit = -int(json.loads(config.get('bot-config', 'take_profit')))
+take_profit = int(json.loads(config.get('bot-config', 'take_profit')))
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 current_prices = {}
 ws_status = False
@@ -148,7 +148,7 @@ def last_order_buy_price(symbol):
     
 def open_order_count(symbol = None):
     if not symbol:
-        return len(db)
+        return db.count((Orders.status == 'open'))
     else:
         return db.count((Orders.symbol == symbol) & (Orders.status == 'open'))
     
@@ -325,7 +325,7 @@ def main():
                                 update_order(buy_time, current_price, p_l_a, profit, time.time())
                     else:
                         # Buy Good Risk
-                        if macd > signal and macd_last < signal_last and rsi < 100:
+                        if macd > signal and macd_last < signal_last and rsi < 50:
                             # Prevent duplicate coin
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 notes.append('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
@@ -344,7 +344,7 @@ def main():
                                 notes.append('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
                         # Sell Good Risk
-                        elif macd < signal and macd_last > signal_last and rsi > 0:
+                        elif macd < signal and macd_last > signal_last and rsi > 50:
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
