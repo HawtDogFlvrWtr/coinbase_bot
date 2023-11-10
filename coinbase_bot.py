@@ -135,6 +135,13 @@ def search_open_order(symbol):
     else:
         return False
     
+def last_order_buy_price(symbol):
+    od = sorted(db.search((Orders.symbol == symbol)), key=lambda k: k['buy_time'])
+    if not od:
+        return False
+    else:
+        return od[-1]['buy_price']
+    
 def open_order_count(symbol = None):
     if not symbol:
         return len(db)
@@ -278,6 +285,8 @@ def main():
                                 continue
                             if open_order_count() > max_orders: # Already met our max open orders
                                 continue
+                            if last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
+                                continue
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate_timestamp(symbol, last_timetamp):
                                 # DO BUY
@@ -308,6 +317,8 @@ def main():
                             if not allow_duplicates and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 continue
                             if open_order_count() > max_orders: # Already met our max open orders
+                                continue
+                            if last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
                                 continue
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate_timestamp(symbol, last_timetamp): 
