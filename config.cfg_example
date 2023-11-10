@@ -26,7 +26,13 @@ timeframe = 1h
 stoploss_percent = 10
 
 # The percent above 0 that you want to stoploss. Must be a positive number
-take_profit = 5
+take_profit = 10
+
+# The rsi value that the current rsi has to be above to buy. Default: 50
+rsi_buy_lt = 50
+
+# The rsi value that the current rsi has to be above to sell. Default: 50
+rsi_sell_gt = 50
 
 # Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
 symbols: ["BTC/USD","ETH/USD","SHIB/USD","DOGE/USD","SOL/USD","LINK/USD","AAVE/USD","XRP/USD"]
