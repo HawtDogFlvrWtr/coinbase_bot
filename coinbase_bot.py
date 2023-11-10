@@ -23,7 +23,7 @@ parser.add_argument('-c', '--config_file', help="The json filename for the order
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
-sleep_lookup = {'1m': 61, '1h': 3601, '1d': 86401} # Added second to give the exchange time to update the candles
+sleep_lookup = {'1m': 120, '1h': 3660, '1d': 86460} # Added second to give the exchange time to update the candles
 
 
 config = configparser.ConfigParser()
@@ -137,7 +137,7 @@ def search_open_order(symbol):
     
 def open_order_count(symbol = None):
     if not symbol:
-        return db.count()
+        return len(db)
     else:
         return db.count(Orders.symbol == symbol)
     
