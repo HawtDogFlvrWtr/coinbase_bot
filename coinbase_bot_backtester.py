@@ -20,11 +20,20 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot_bt.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
 parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1514782800)
+parser.add_argument('-rb', '--rsi_buy_lt', help="The start time for backtesting", type=int, default=50)
+parser.add_argument('-rs', '--rsi_sell_gt', help="The start time for backtesting", type=int, default=50)
+parser.add_argument('-t', '--take_profit', help="The start time for backtesting", type=int, default=5)
+parser.add_argument('-sl', '--stoploss_percent', help="The start time for backtesting", type=int, default=10)
+
 
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
 since_start = args.start_time
+rsi_buy_lt = args.rsi_buy_lt
+rsi_sell_gt = args.rsi_sell_gt
+take_profit = args.take_profit
+stoploss_percent = args.stoploss_percent
 sleep_lookup = {'1m': 120, '1h': 3660, '1d': 86460} # Added second to give the exchange time to update the candles
 
 config = configparser.ConfigParser()
@@ -36,15 +45,9 @@ timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
-stoploss_percent = -abs(int(json.loads(config.get('bot-config', 'stoploss_percent'))))
-take_profit = int(json.loads(config.get('bot-config', 'take_profit')))
-rsi_buy_lt = int(json.loads(config.get('bot-config', 'rsi_buy_lt')))
-rsi_sell_gt = int(json.loads(config.get('bot-config', 'rsi_sell_gt')))
-
 
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 current_prices = {}
-ws_status = False
 
 max_order_amount = buy_percent / 100 * spend_dollars
 max_orders = int(spend_dollars / max_order_amount)
@@ -273,7 +276,7 @@ def main():
                         print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
                 if last_profit != sum(profit_list):
-                    print("Profit: %s Theirs: %s" % (sum(profit_list), return_closed_profit()))
+                    print("Profit: %s" % sum(profit_list))
                     last_profit = sum(profit_list)
             since_start = last_timestamp / 1000
             if since_start >= time.time() - 60:
