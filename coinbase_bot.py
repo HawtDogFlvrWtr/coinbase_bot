@@ -35,6 +35,8 @@ timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
+stoploss_percent = -abs(int(json.loads(config.get('bot-config', 'stoploss_percent'))))
+take_profit = -int(json.loads(config.get('bot-config', 'take_profit')))
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 current_prices = {}
 ws_status = False
@@ -317,6 +319,8 @@ def main():
                                 p_l_a = (current_price - buy_price)
                                 p_l_p = 100 * p_l_a / ((close + buy_price) / 2)
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                if profit < 0: # Don't sell if we're way down
+                                    continue
                                 notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, p_l_a, profit, time.time())
                     else:
@@ -353,8 +357,26 @@ def main():
                                 buy_amount = buy_order['buy_amount']
                                 p_l_a = (current_price - buy_price)
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                if profit < 0: # Don't sell if we're way down
+                                    continue
                                 notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, p_l_a, profit, time.time())
+                    # Check for stoploss
+                    buy_orders = search_order(symbol)
+                    for buy_order in buy_orders:
+                        if buy_order['status'] == 'closed':
+                            continue
+                        timestamp = buy_order['buy_time']
+                        buy_price = buy_order['buy_price']
+                        buy_amount = buy_order['buy_amount']
+                        p_l_a = (current_price - buy_price)
+                        profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                        if int(profit) < stoploss_percent:
+                            notes.append('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                            update_order(timestamp, current_price, p_l_a, profit, time.time())
+                        if int(profit) > take_profit:
+                            notes.append('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                            update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
                 last_run = last_timetamp # last timestamp in the data we got
             print_orders(last_run, notes)
             if ws_status:
