@@ -361,23 +361,24 @@ def main():
                                     continue
                                 notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, p_l_a, profit, time.time())
-                    # Check for stoploss
-                    buy_orders = search_order(symbol)
-                    for buy_order in buy_orders:
-                        if buy_order['status'] == 'closed':
-                            continue
-                        timestamp = buy_order['buy_time']
-                        buy_price = buy_order['buy_price']
-                        buy_amount = buy_order['buy_amount']
-                        p_l_a = (current_price - buy_price)
-                        profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                        if int(profit) < stoploss_percent:
-                            notes.append('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                            update_order(timestamp, current_price, p_l_a, profit, time.time())
-                        if int(profit) > take_profit:
-                            notes.append('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                            update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
-                last_run = last_timetamp # last timestamp in the data we got
+                    last_run = last_timetamp # last timestamp in the data we got
+            # Check for stoploss
+            buy_orders = search_order(symbol)
+            for buy_order in buy_orders:
+                if buy_order['status'] == 'closed':
+                    continue
+                timestamp = buy_order['buy_time']
+                buy_price = buy_order['buy_price']
+                buy_amount = buy_order['buy_amount']
+                p_l_a = (current_price - buy_price)
+                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                if int(profit) < stoploss_percent:
+                    notes.append('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, p_l_a, profit, time.time())
+                if int(profit) > take_profit:
+                    notes.append('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
+
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
