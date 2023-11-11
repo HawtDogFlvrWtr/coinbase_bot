@@ -23,7 +23,7 @@ parser.add_argument('-c', '--config_file', help="The json filename for the order
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
-sleep_lookup = {'1m': 120, '1h': 3660, '1d': 86460} # Added second to give the exchange time to update the candles
+sleep_lookup = {'1m': 120, '1h': 3900, '1d': 87000} # Added second to give the exchange time to update the candles
 
 
 config = configparser.ConfigParser()
@@ -131,10 +131,10 @@ worker.daemon = True
 worker.start()
 
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
-    db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': "", 'sell_delta': "", 'sell_profit': "", 'sell_time': ""})
+    db.insert({'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': 0, 'sell_profit': 0, 'sell_time': 0})
 
-def update_order(buy_time, sell_price, sell_delta, sell_profit, sell_time):
-    db.update({'status': 'closed', 'sell_price': sell_price, 'sell_delta': sell_delta, 'sell_profit': sell_profit, 'sell_time': sell_time}, Orders.buy_time == buy_time)
+def update_order(buy_time, sell_price, sell_profit, sell_time):
+    db.update({'status': 'closed', 'sell_price': sell_price, 'sell_profit': sell_profit, 'sell_time': sell_time}, Orders.buy_time == buy_time)
 
 def search_open_order(symbol):
     results = db.search((Orders.symbol == symbol) & (Orders.status == 'open'))
@@ -246,13 +246,12 @@ def print_orders(last_run, notes):
 
 def get_current_price(symbol):
     global current_prices
-    global ws_status
-    if current_prices[symbol.replace('/', '-')] and current_prices[symbol.replace('/', '-')]['timestamp'] >= time.time() - 5: # Check for fresh websocket data before using it 
-        current_price = current_prices[symbol.replace('/', '-')]['price']
+    clean_symbol = symbol.replace('/', '-')
+    if current_prices[clean_symbol] and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
+        current_price = current_prices[clean_symbol]['price']
     else:
         ticker = exchange.fetch_ticker(symbol)
         current_price = ticker['last']
-        ws_status = False
     return current_price
 
 def calculate_sma(df, period):
@@ -265,8 +264,8 @@ def main():
     last_run = None
     notes = []
     while True:
-        if len(notes) > 5: # Only keep 5 messages
-            notes = notes[-5:]
+        if len(notes) > 15: # Only keep 5 messages
+            notes = notes[-15:]
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         try:
             if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
@@ -311,6 +310,8 @@ def main():
                                 buy_time = time.time()
                                 notes.append('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
+                            else:
+                                notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Low Risk
                         elif fast_sma_previous > slow_sma_previous and fast_sma_current < slow_sma_current and macd < signal:
                             # DO SELL
@@ -324,16 +325,17 @@ def main():
                                 buy_time = buy_order['buy_time']
                                 buy_price = buy_order['buy_price']
                                 buy_amount = buy_order['buy_amount']
-                                p_l_a = (current_price - buy_price)
-                                p_l_p = 100 * p_l_a / ((close + buy_price) / 2)
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
                                 notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(buy_time, current_price, p_l_a, profit, time.time())
+                                update_order(buy_time, current_price, profit, time.time())
                     else:
                         # Buy Good Risk
-                        if macd > signal and macd_last < signal_last and rsi < rsi_buy_lt:
+                        if macd > signal and macd_last < signal_last:
+                            notes.append("MACD Buy Good for %s. RSI: %s" % (symbol, rsi))
+                            if rsi > rsi_buy_lt:
+                                continue
                             # Prevent duplicate coin
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 notes.append('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
@@ -351,8 +353,13 @@ def main():
                                 buy_time = time.time()
                                 notes.append('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
+                            else:
+                                notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Good Risk
-                        elif macd < signal and macd_last > signal_last and rsi > rsi_sell_gt:
+                        elif macd < signal and macd_last > signal_last:
+                            notes.append("MACD Sell Good for %s. RSI: %s" % (symbol, rsi))
+                            if rsi < rsi_sell_gt:
+                                continue
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
@@ -363,12 +370,12 @@ def main():
                                 buy_time = buy_order['buy_time']
                                 buy_price = buy_order['buy_price']
                                 buy_amount = buy_order['buy_amount']
-                                p_l_a = (current_price - buy_price)
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
                                 notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(buy_time, current_price, p_l_a, profit, time.time())
+                                update_order(buy_time, current_price, profit, time.time())
+
                 last_run = last_timetamp # last timestamp in the data we got
                 # Check for stoploss and take profit on the timeframe
                 buy_orders = search_order()
@@ -380,14 +387,13 @@ def main():
                     timestamp = buy_order['buy_time']
                     buy_price = buy_order['buy_price']
                     buy_amount = buy_order['buy_amount']
-                    p_l_a = (current_price - buy_price)
                     profit = (buy_amount * current_price) - (buy_price * buy_amount)
                     if int(profit) < stoploss_percent:
                         notes.append('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, p_l_a, profit, time.time())
-                    if int(profit) > take_profit:
+                        update_order(timestamp, current_price, profit, time.time())
+                    elif int(profit) > take_profit:
                         notes.append('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
+                        update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
