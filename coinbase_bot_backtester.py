@@ -19,7 +19,7 @@ from websocket import create_connection, WebSocketConnectionClosedException # we
 parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot_bt.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
-parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1698811200)
+parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1672531200)
 parser.add_argument('-rb', '--rsi_buy_lt', help="The start time for backtesting", type=int, default=50)
 parser.add_argument('-rs', '--rsi_sell_gt', help="The start time for backtesting", type=int, default=50)
 parser.add_argument('-t', '--take_profit', help="The start time for backtesting", type=int, default=5)
@@ -169,156 +169,158 @@ def main():
     notes = []
     profit_list = []
     last_profit = 0
-    while True:
-        #if len(notes) > 5: # Only keep 5 messages
-        #    notes = notes[-5:]
-        last_timetamp = time.time() # In case nothing comes through, we set this to now.
-        try:
-            for symbol in symbols:
-                df = fetch_ohlcv_data(symbol, since_start)
-                if len(df) < 1:
-                    continue # This symbol doesn't exist on coinbase.
-                last_timestamp = df['timestamp'].iloc[-1]
-                df = macd_signals(df,symbol)
-                df['fast_sma'] = calculate_sma(df, fast_sma_period)
-                df['slow_sma'] = calculate_sma(df, slow_sma_period)
-                for index, row in df.iterrows():
-                    prev_index = index - 1
-                    macd = row['MACD_12_26_9']
-                    macd_last = df['MACD_12_26_9'].iloc[prev_index]
-                    signal = row['MACDs_12_26_9']
-                    signal_last = df['MACDs_12_26_9'].iloc[prev_index]
-                    close = row['close']
-                    rsi = row['RSI_14']
-                    fast_sma_current = row['fast_sma']
-                    slow_sma_current = row['slow_sma']
-                    fast_sma_previous = df['fast_sma'].iloc[prev_index]
-                    slow_sma_previous = df['slow_sma'].iloc[prev_index]
-                    record_timestamp = row['timestamp']
-                    note_timestamp = datetime.datetime.fromtimestamp(record_timestamp/ 1000).strftime('%m-%d-%Y %H:%M:%S')
-                    current_price = close
-                    # Check for a buy signal
-                    if risk_level == 'safe':
-                        # Buy Low Risk
-                        if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
-                            if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+    #if len(notes) > 5: # Only keep 5 messages
+    #    notes = notes[-5:]
+    last_timestamp = time.time() # In case nothing comes through, we set this to now.
+    try:
+        last_last_timestamp = 0
+        for symbol in symbols:
+            df = fetch_ohlcv_data(symbol, since_start)
+            if len(df) < 1:
+                continue # This symbol doesn't exist on coinbase.
+            last_timestamp = df['timestamp'].iloc[-1]
+            df = macd_signals(df,symbol)
+            df['fast_sma'] = calculate_sma(df, fast_sma_period)
+            df['slow_sma'] = calculate_sma(df, slow_sma_period)
+            for index, row in df.iterrows():
+                prev_index = index - 1
+                macd = row['MACD_12_26_9']
+                macd_last = df['MACD_12_26_9'].iloc[prev_index]
+                signal = row['MACDs_12_26_9']
+                signal_last = df['MACDs_12_26_9'].iloc[prev_index]
+                close = row['close']
+                rsi = row['RSI_14']
+                fast_sma_current = row['fast_sma']
+                slow_sma_current = row['slow_sma']
+                fast_sma_previous = df['fast_sma'].iloc[prev_index]
+                slow_sma_previous = df['slow_sma'].iloc[prev_index]
+                record_timestamp = row['timestamp']
+                last_timestamp = record_timestamp
+                note_timestamp = datetime.datetime.fromtimestamp(record_timestamp/ 1000).strftime('%m-%d-%Y %H:%M:%S')
+                current_price = close
+                # Check for a buy signal
+                if risk_level == 'safe':
+                    # Buy Low Risk
+                    if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
+                        if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
+                            print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                            continue
+                        if open_order_count() > max_orders: # Already met our max open orders
+                            print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                            continue
+                        #if last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
+                        #    print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                        #    continue
+                        # Check for an order that fired at on the same epoch and symbol
+                        # DO BUY
+                        buy_amount = max_order_amount / current_price
+                        buy_time = last_timestamp
+                        print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                        insert_order('open', symbol, buy_amount, buy_time, last_timestamp, current_price)
+                    # Sell Low Risk
+                    elif fast_sma_previous > slow_sma_previous and fast_sma_current < slow_sma_current and macd < signal:
+                        # DO SELL
+                        if not search_open_order(symbol):
+                            continue # No open orders for this coin
+                        # DO SELL
+                        buy_orders = search_order(symbol)
+                        for buy_order in buy_orders:
+                            if buy_order['status'] == 'closed':
                                 continue
-                            if open_order_count() > max_orders: # Already met our max open orders
-                                print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                            timestamp = buy_order['buy_time']
+                            buy_price = buy_order['buy_price']
+                            buy_amount = buy_order['buy_amount']
+                            p_l_a = (current_price - buy_price)
+                            profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                            if profit < 0:
                                 continue
-                            #if last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
-                            #    print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
-                            #    continue
-                            # Check for an order that fired at on the same epoch and symbol
-                            # DO BUY
-                            buy_amount = max_order_amount / current_price
-                            buy_time = last_timetamp
-                            print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                            insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
-                        # Sell Low Risk
-                        elif fast_sma_previous > slow_sma_previous and fast_sma_current < slow_sma_current and macd < signal:
-                            # DO SELL
-                            if not search_open_order(symbol):
-                                continue # No open orders for this coin
-                            # DO SELL
-                            buy_orders = search_order(symbol)
-                            for buy_order in buy_orders:
-                                if buy_order['status'] == 'closed':
-                                    continue
-                                timestamp = buy_order['buy_time']
-                                buy_price = buy_order['buy_price']
-                                buy_amount = buy_order['buy_amount']
-                                p_l_a = (current_price - buy_price)
-                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                                if profit < 0:
-                                    continue
-                                profit_list.append(profit)
-                                print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
-                    else:
-                        # Buy Good Risk
-                        if macd > signal and macd_last < signal_last and rsi < rsi_buy_lt:
-                            # Prevent duplicate coin
-                            if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                            profit_list.append(profit)
+                            print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                            update_order(timestamp, current_price, p_l_a, profit, last_timestamp)
+                else:
+                    # Buy Good Risk
+                    if macd > signal and macd_last < signal_last and rsi < rsi_buy_lt:
+                        # Prevent duplicate coin
+                        if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
+                            print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                            continue
+                        if open_order_count() > max_orders: # Already met our max open orders
+                            print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                            continue
+                        #if last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
+                        #    print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                        #    continue
+                        # DO BUY
+                        buy_amount = max_order_amount / current_price
+                        buy_time = last_timestamp
+                        print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                        insert_order('open', symbol, buy_amount, buy_time, last_timestamp, current_price)
+                    # Sell Good Risk
+                    elif macd < signal and macd_last > signal_last and rsi > rsi_sell_gt:
+                        # DO SELL
+                        if not search_open_order(symbol):
+                            continue
+                        buy_orders = search_order(symbol)
+                        for buy_order in buy_orders:
+                            if buy_order['status'] == 'closed':
                                 continue
-                            if open_order_count() > max_orders: # Already met our max open orders
-                                print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                            timestamp = buy_order['buy_time']
+                            buy_price = buy_order['buy_price']
+                            buy_amount = buy_order['buy_amount']
+                            p_l_a = (current_price - buy_price)
+                            profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                            if profit < 0:
                                 continue
-                            #if last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
-                            #    print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
-                            #    continue
-                            # DO BUY
-                            buy_amount = max_order_amount / current_price
-                            buy_time = last_timetamp
-                            print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                            insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
-                        # Sell Good Risk
-                        elif macd < signal and macd_last > signal_last and rsi > rsi_sell_gt:
-                            # DO SELL
-                            if not search_open_order(symbol):
-                                continue
-                            buy_orders = search_order(symbol)
-                            for buy_order in buy_orders:
-                                if buy_order['status'] == 'closed':
-                                    continue
-                                timestamp = buy_order['buy_time']
-                                buy_price = buy_order['buy_price']
-                                buy_amount = buy_order['buy_amount']
-                                p_l_a = (current_price - buy_price)
-                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                                if profit < 0:
-                                    continue
-                                profit_list.append(profit)
-                                print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
-                buy_orders = search_order(symbol)
-                for buy_order in buy_orders:
-                    if buy_order['status'] == 'closed':
-                        continue
-                    timestamp = buy_order['buy_time']
-                    buy_price = buy_order['buy_price']
-                    buy_amount = buy_order['buy_amount']
-                    p_l_a = (current_price - buy_price)
-                    profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                    if int(profit) < stoploss_percent:
-                        profit_list.append(profit)
-                        print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
-                    if int(profit) > take_profit:
-                        profit_list.append(profit)
-                        print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, p_l_a, profit, last_timetamp)
-                if last_profit != sum(profit_list):
-                    print("Profit: %s" % sum(profit_list))
-                    last_profit = sum(profit_list)
-            since_start = last_timestamp / 1000
-            if since_start >= time.time() - 60:
-                print("Backtesting finished")
-                sys.exit(0)
-        except ccxt.RequestTimeout as e:
-            # recoverable error, do nothing and retry later
-            print(type(e).__name__, str(e))
-        except ccxt.DDoSProtection as e:
-            # recoverable error, you might want to sleep a bit here and retry later
-            print(type(e).__name__, str(e))
-        except ccxt.ExchangeNotAvailable as e:
-            # recoverable error, do nothing and retry later
-            print(type(e).__name__, str(e))
-        except ccxt.NetworkError as e:
-            # do nothing and retry later...
-            print(type(e).__name__, str(e))
-        except ccxt.ExchangeError as e:
-            print(type(e).__name__, str(e))
-            time.sleep(10)
-        except ValueError as e:
-            since_start = (since_start * (60 * 300)) / 1000
-            continue
-        #except Exception as e:
-        #    # panic and halt the execution in case of any other error
-        #    print(type(e).__name__, str(e))
-        #    sys.exit()
+                            profit_list.append(profit)
+                            print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                            update_order(timestamp, current_price, p_l_a, profit, last_timestamp)
+            buy_orders = search_order(symbol)
+            for buy_order in buy_orders:
+                if buy_order['status'] == 'closed':
+                    continue
+                timestamp = buy_order['buy_time']
+                buy_price = buy_order['buy_price']
+                buy_amount = buy_order['buy_amount']
+                p_l_a = (current_price - buy_price)
+                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                if int(profit) < stoploss_percent:
+                    profit_list.append(profit)
+                    print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, p_l_a, profit, last_timestamp)
+                if int(profit) > take_profit:
+                    profit_list.append(profit)
+                    print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, p_l_a, profit, last_timestamp)
+            if last_profit != sum(profit_list):
+                print("Profit: %s" % sum(profit_list))
+                last_profit = sum(profit_list)
+        since_start = last_timestamp / 1000
+        if last_timestamp == last_last_timestamp:
+            print("Backtesting finished")
+            sys.exit(0)
+        else:
+            last_last_timestamp = last_timestamp
+    except ccxt.RequestTimeout as e:
+        # recoverable error, do nothing and retry later
+        print(type(e).__name__, str(e))
+    except ccxt.DDoSProtection as e:
+        # recoverable error, you might want to sleep a bit here and retry later
+        print(type(e).__name__, str(e))
+    except ccxt.ExchangeNotAvailable as e:
+        # recoverable error, do nothing and retry later
+        print(type(e).__name__, str(e))
+    except ccxt.NetworkError as e:
+        # do nothing and retry later...
+        print(type(e).__name__, str(e))
+    except ccxt.ExchangeError as e:
+        print(type(e).__name__, str(e))
+        time.sleep(10)
+    except ValueError as e:
+        since_start = (since_start * (60 * 300)) / 1000
+    #except Exception as e:
+    #    # panic and halt the execution in case of any other error
+    #    print(type(e).__name__, str(e))
+    #    sys.exit()
 
 
 if __name__ == "__main__":
