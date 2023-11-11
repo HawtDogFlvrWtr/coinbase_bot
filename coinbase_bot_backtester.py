@@ -25,7 +25,6 @@ parser.add_argument('-rs', '--rsi_sell_gt', help="The start time for backtesting
 parser.add_argument('-t', '--take_profit', help="The start time for backtesting", type=int, default=5)
 parser.add_argument('-sl', '--stoploss_percent', help="The start time for backtesting", type=int, default=10)
 
-
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
@@ -33,7 +32,7 @@ since_start = args.start_time
 rsi_buy_lt = args.rsi_buy_lt
 rsi_sell_gt = args.rsi_sell_gt
 take_profit = args.take_profit
-stoploss_percent = args.stoploss_percent
+stoploss_percent = -abs(args.stoploss_percent)
 sleep_lookup = {'1m': 120, '1h': 3660, '1d': 86460} # Added second to give the exchange time to update the candles
 
 config = configparser.ConfigParser()
@@ -130,8 +129,23 @@ def return_closed_profit():
     return sum(profit_list)
 
 def fetch_ohlcv_data(symbol, start_time):
-    since = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%dT%H:%M:%SZ')
-    ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe, exchange.parse8601(since))
+    file_path = "backtesting_data/%s_%s.json" % (symbol.replace('/', '-'), timeframe)
+    # Lets try to load the data from our saves first and fill in the gap if we don't.
+    have_saved = False
+    if os.path.isfile(file_path):
+        open_json = open(file_path)
+        ohlcv_data_load = json.load(open_json)
+        last_epoch = ohlcv_data_load[-1][0] / 1000
+        if last_epoch > start_time:
+            have_saved = True
+    if have_saved:
+        for i in range(len(ohlcv_data_load)):
+            if ohlcv_data_load[i][0] / 1000 >= start_time:
+                ohlcv_data = ohlcv_data_load[i:]
+                break
+    else:
+        since = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%dT%H:%M:%SZ')
+        ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe, exchange.parse8601(since))
     df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
     return df
 
@@ -180,7 +194,8 @@ def main():
                     slow_sma_current = row['slow_sma']
                     fast_sma_previous = df['fast_sma'].iloc[prev_index]
                     slow_sma_previous = df['slow_sma'].iloc[prev_index]
-                    note_timestamp = datetime.datetime.fromtimestamp(last_timestamp/ 1000).strftime('%m-%d-%Y %H:%M:%S')
+                    record_timestamp = row['timestamp']
+                    note_timestamp = datetime.datetime.fromtimestamp(record_timestamp/ 1000).strftime('%m-%d-%Y %H:%M:%S')
                     current_price = close
                     # Check for a buy signal
                     if risk_level == 'safe':
