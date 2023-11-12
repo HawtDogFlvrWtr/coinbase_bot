@@ -272,7 +272,10 @@ def add_note(note):
     with open(bot_log, 'a+') as b_log: # Log to our log file
         b_log.write(note)
     if bot:
-        bot.send_message(telegram_userid, note)
+        try:
+            bot.send_message(telegram_userid, note)
+        except: # who cares if we can't send the text
+            pass
 
 def calculate_sma(df, period):
     return df['close'].rolling(window=period).mean()
