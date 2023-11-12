@@ -13,8 +13,8 @@ import time
 from prettytable import PrettyTable
 from tinydb import TinyDB, Query
 from threading import Thread
+import telebot
 from websocket import create_connection, WebSocketConnectionClosedException # websocket-client
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot.json')
@@ -29,6 +29,12 @@ config = configparser.ConfigParser()
 config.read(config_file)
 api_key = config.get('api-config', 'api_key')
 secret = config.get('api-config', 'secret')
+telegram_key = config.get('api-config', 'telegram_key')
+telegram_userid = config.get('api-config', 'telegram_userid')
+if (telegram_key != '' and telegram_userid != ''):
+    bot = telebot.TeleBot(telegram_key)
+else:
+    bot = None
 risk_level = config.get('bot-config', 'risk_level')
 timeframe = config.get('bot-config', 'timeframe')
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
@@ -41,6 +47,9 @@ rsi_buy_lt = int(json.loads(config.get('bot-config', 'rsi_buy_lt')))
 rsi_sell_gt = int(json.loads(config.get('bot-config', 'rsi_sell_gt')))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
 
+bot_log = 'bot_logs.txt'
+
+notes = []
 current_prices = {}
 ws_status = False
 
@@ -240,7 +249,9 @@ def print_orders(last_run, notes):
     else:
         color = N
     print("Last Check: %s - Websocket Up: %s - Total P$: %s%s%s" % (last_run, ws_status, color, round(sum_profit,2), N))
-    print(t.get_string(sortby="Order Time"))
+    status = t.get_string(sortby="Order Time")
+    print(status)
+    notes.reverse() # Reverse the notes list
     print('\n'.join(notes))
 
 def get_current_price(symbol):
@@ -253,15 +264,71 @@ def get_current_price(symbol):
         current_price = ticker['last']
     return current_price
 
+def add_note(note):
+    global telegram_userid
+    global bot
+    global notes
+    notes.append(note)
+    with open(bot_log, 'a+') as b_log: # Log to our log file
+        b_log.write(note)
+    if bot:
+        bot.send_message(telegram_userid, note)
+
 def calculate_sma(df, period):
     return df['close'].rolling(window=period).mean()
+
+def telegram_bot():
+    global bot
+    try:
+        @bot.message_handler(commands=['help'])
+        def handle_help(message):
+            # Provide a list of available commands and their descriptions
+            help_text = '''
+            Available commands:
+            - /help: Show available commands and descriptions.
+            - /orders: Display your open orders or trade history.
+            '''
+            bot.reply_to(message, help_text)
+
+        @bot.message_handler(commands=['orders'])
+        def handle_help(message):
+            order_lines = []
+            order_lines.append('| Symbol | Buy Price | Current Price | P$ | P% | Order Time |')
+            order_list = db.search(Orders.status == 'open')
+            for order in order_list:
+                symbol = order['symbol']
+                buy_price = order['buy_price']
+                buy_amount = order['buy_amount']
+                amount_spent = buy_price * buy_amount
+                current_price = get_current_price(symbol)
+                ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
+                p_l_a = (current_price - buy_price)
+                p_l_p = 100 * p_l_a / ((current_price + buy_price) / 2)
+                p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
+                p_l_d = p_l_d - amount_spent
+                order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_a,2), round(p_l_p,2), ts))
+            bot.reply_to(message, "%s" % "\n".join(order_lines))
+        bot.polling()
+    except telebot.apihelper.ApiTelegramException as e:
+        print("Telegram key is incorrect or config items missing.")
+
+# Start telegram bot thread
+t_worker = Thread(target=telegram_bot, args=())
+t_worker.daemon = True
+t_worker.start()
+
 
 def main():
     # To preload my order
     #insert_order('open', 'SHIB/USD', 77416742.61585483, 1698787595, 0.00000768)
     global since_start
+    global notes
     last_run = None
-    notes = []
+    if os.path.isfile(bot_log): # update logs
+        with open(bot_log, 'r') as o_log:
+            for line in o_log:
+                notes.append(line)
+
     while True:
         if len(notes) > 15: # Only keep 5 messages
             notes = notes[-15:]
@@ -271,7 +338,7 @@ def main():
                 for symbol in symbols:
                     df = fetch_ohlcv_data(symbol)
                     if len(df) < 1:
-                        notes.append("%s doesn't appear to be a valid symbol on Coinbase A.T. Please remove it from your list of symbols above, and restart the bot." % symbol)
+                        add_note("%s doesn't appear to be a valid symbol on Coinbase A.T. Please remove it from your list of symbols above, and restart the bot." % symbol)
                         continue # This symbol doesn't exist on coinbase.
                     df = macd_signals(df,symbol)
                     df['fast_sma'] = calculate_sma(df, fast_sma_period)
@@ -294,23 +361,23 @@ def main():
                         # Buy Low Risk
                         if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                notes.append('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                                 continue
                             if open_order_count() > max_orders: # Already met our max open orders
-                                notes.append('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                                 continue
                             if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
-                                notes.append('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
                                 continue
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate_timestamp(symbol, last_timetamp):
                                 # DO BUY
                                 buy_amount = max_order_amount / current_price
                                 buy_time = time.time()
-                                notes.append('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                                add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
                             else:
-                                notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
+                                add_note('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Low Risk
                         elif fast_sma_previous > slow_sma_previous and fast_sma_current < slow_sma_current and macd < signal:
                             # DO SELL
@@ -327,30 +394,30 @@ def main():
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
-                                notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                                add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, profit, time.time())
                     else:
                         # Buy Good Risk
                         if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
                             # Prevent duplicate coin
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                notes.append('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                                 continue
                             if open_order_count() > max_orders: # Already met our max open orders
-                                notes.append('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                                 continue
                             if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
-                                notes.append('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                                add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
                                 continue
                             # Check for an order that fired at on the same epoch and symbol
                             if not search_open_duplicate_timestamp(symbol, last_timetamp): 
                                 # DO BUY
                                 buy_amount = max_order_amount / current_price
                                 buy_time = time.time()
-                                notes.append('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                                add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                                 insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
                             else:
-                                notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
+                                add_note('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Good Risk
                         elif macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
                             # DO SELL
@@ -366,7 +433,7 @@ def main():
                                 profit = (buy_amount * current_price) - (buy_price * buy_amount)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
-                                notes.append('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                                add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, profit, time.time())
 
                 last_run = last_timetamp # last timestamp in the data we got
@@ -382,10 +449,10 @@ def main():
                     buy_amount = buy_order['buy_amount']
                     profit = (buy_amount * current_price) - (buy_price * buy_amount)
                     if int(profit) < stoploss_percent:
-                        notes.append('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, profit, time.time())
                     elif int(profit) > take_profit:
-                        notes.append('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
@@ -394,18 +461,18 @@ def main():
                 time.sleep(1)
         except ccxt.RequestTimeout as e:
             # recoverable error, do nothing and retry later
-            notes.append(type(e).__name__, str(e))
+            add_note(type(e).__name__, str(e))
         except ccxt.DDoSProtection as e:
             # recoverable error, you might want to sleep a bit here and retry later
-            notes.append(type(e).__name__, str(e))
+            add_note(type(e).__name__, str(e))
         except ccxt.ExchangeNotAvailable as e:
             # recoverable error, do nothing and retry later
-            notes.append(type(e).__name__, str(e))
+            add_note(type(e).__name__, str(e))
         except ccxt.NetworkError as e:
             # do nothing and retry later...
-            notes.append(type(e).__name__, str(e))
+            add_note(type(e).__name__, str(e))
         except ccxt.ExchangeError as e:
-            notes.append(type(e).__name__, str(e))
+            add_note(type(e).__name__, str(e))
             time.sleep(10)
         #except Exception as e:
         #    # panic and halt the execution in case of any other error
