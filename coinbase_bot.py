@@ -23,7 +23,7 @@ parser.add_argument('-c', '--config_file', help="The json filename for the order
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
-sleep_lookup = {'1m': 120, '1h': 3900, '1d': 87000} # Added second to give the exchange time to update the candles
+sleep_lookup = {'1m': 60, '1h': 3600, '1d': 86400} # Added second to give the exchange time to update the candles
 
 
 config = configparser.ConfigParser()
@@ -332,9 +332,7 @@ def main():
                                 update_order(buy_time, current_price, profit, time.time())
                     else:
                         # Buy Good Risk
-                        if macd > signal and macd_last < signal_last:
-                            if rsi > rsi_buy_lt:
-                                continue
+                        if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
                             # Prevent duplicate coin
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 notes.append('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
@@ -355,9 +353,7 @@ def main():
                             else:
                                 notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Good Risk
-                        elif macd < signal and macd_last > signal_last:
-                            if rsi < rsi_sell_gt:
-                                continue
+                        elif macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
                             # DO SELL
                             if not search_open_order(symbol):
                                 continue
