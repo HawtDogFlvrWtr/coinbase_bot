@@ -4,6 +4,12 @@
 api_key = xxxxxxxxxxxxxxxx
 secret = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
+# Generate an api key by following these instructions: https://core.telegram.org/bots/tutorial#obtain-your-bot-token
+telegram_key = 4839574812:AAFD39kkdpWt3ywyRZergyOLMaJhac60qc
+
+# Get your telegram id by chatting @userinfobot at https://t.me/userinfobot
+telegram_userid = xxxxxxxxxx
+
 [spend-config]
 # The amount in USD you're willing to use from your holdings
 spend_dollars = 1000
@@ -33,6 +39,9 @@ rsi_buy_lt = 50
 
 # The rsi value that the current rsi has to be above to sell. Default: 50
 rsi_sell_gt = 50
+
+# This will prevent buying additional of the same symbol if the price is higher than the previous buy if set to False. Default: True
+buy_when_higher = True
 
 # Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
 symbols: ["BTC/USD","ETH/USD","SHIB/USD","DOGE/USD","SOL/USD","LINK/USD","AAVE/USD","XRP/USD"]
