@@ -247,7 +247,7 @@ def print_orders(last_run, notes):
 def get_current_price(symbol):
     global current_prices
     clean_symbol = symbol.replace('/', '-')
-    if current_prices[clean_symbol] and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
+    if clean_symbol in current_prices and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
         current_price = current_prices[clean_symbol]['price']
     else:
         ticker = exchange.fetch_ticker(symbol)
@@ -333,7 +333,6 @@ def main():
                     else:
                         # Buy Good Risk
                         if macd > signal and macd_last < signal_last:
-                            notes.append("MACD Buy Good for %s. RSI: %s" % (symbol, rsi))
                             if rsi > rsi_buy_lt:
                                 continue
                             # Prevent duplicate coin
@@ -357,7 +356,6 @@ def main():
                                 notes.append('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                         # Sell Good Risk
                         elif macd < signal and macd_last > signal_last:
-                            notes.append("MACD Sell Good for %s. RSI: %s" % (symbol, rsi))
                             if rsi < rsi_sell_gt:
                                 continue
                             # DO SELL
