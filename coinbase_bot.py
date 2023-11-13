@@ -23,7 +23,7 @@ parser.add_argument('-c', '--config_file', help="The json filename for the order
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
-sleep_lookup = {'1m': 120, '1h': 3900, '1d': 87000} # Added second to give the exchange time to update the candles
+sleep_lookup = {'1m': 60, '1h': 3600, '1d': 84000} # Added second to give the exchange time to update the candles
 
 config = configparser.ConfigParser()
 config.read(config_file)
