@@ -229,7 +229,8 @@ def print_orders(last_run, notes):
             ts = datetime.datetime.fromtimestamp(order['sell_time']).strftime('%m-%d-%Y %H:%M:%S')
             profit_list.append(order['sell_profit'])
         p_l_a = (current_price - buy_price)
-        p_l_p = 100 * p_l_a / ((current_price + buy_price) / 2)
+        p_l_p = round((p_l_a / buy_price) * 100, 2)
+        #p_l_p = 100 * p_l_a / ((current_price + buy_price) / 2)
         p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent;
         p_l_d = p_l_d - amount_spent
         if p_l_a > 0:
@@ -251,7 +252,6 @@ def print_orders(last_run, notes):
     print("Last Check: %s - Websocket Up: %s - Total P$: %s%s%s" % (last_run, ws_status, color, round(sum_profit,2), N))
     status = t.get_string(sortby="Order Time")
     print(status)
-    notes.reverse() # Reverse the notes list
     print('\n'.join(notes))
 
 def get_current_price(symbol):
@@ -270,7 +270,7 @@ def add_note(note):
     global notes
     notes.append(note)
     with open(bot_log, 'a+') as b_log: # Log to our log file
-        b_log.write(note)
+        b_log.write("%s\n" % note)
     if bot:
         try:
             bot.send_message(telegram_userid, note)
@@ -306,10 +306,11 @@ def telegram_bot():
                 current_price = get_current_price(symbol)
                 ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
                 p_l_a = (current_price - buy_price)
-                p_l_p = 100 * p_l_a / ((current_price + buy_price) / 2)
+                p_l_p = round((p_l_a / buy_price) * 100, 2)
+                # = 100 * p_l_a / ((current_price + buy_price) / 2)
                 p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
                 p_l_d = p_l_d - amount_spent
-                order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_a,2), round(p_l_p,2), ts))
+                order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_d,2), round(p_l_p,2), ts))
             bot.reply_to(message, "%s" % "\n".join(order_lines))
         bot.polling()
     except telebot.apihelper.ApiTelegramException as e:
@@ -330,7 +331,7 @@ def main():
     if os.path.isfile(bot_log): # update logs
         with open(bot_log, 'r') as o_log:
             for line in o_log:
-                notes.append(line)
+                notes.append(line.rstrip())
 
     while True:
         if len(notes) > 15: # Only keep 5 messages
@@ -394,7 +395,7 @@ def main():
                                 buy_time = buy_order['buy_time']
                                 buy_price = buy_order['buy_price']
                                 buy_amount = buy_order['buy_amount']
-                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
                                 add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
@@ -433,30 +434,31 @@ def main():
                                 buy_time = buy_order['buy_time']
                                 buy_price = buy_order['buy_price']
                                 buy_amount = buy_order['buy_amount']
-                                profit = (buy_amount * current_price) - (buy_price * buy_amount)
+                                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
                                 if profit < 0: # Don't sell if we're way down
                                     continue
                                 add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, profit, time.time())
 
-                last_run = last_timetamp # last timestamp in the data we got
-                # Check for stoploss and take profit on the timeframe
-                buy_orders = search_order()
-                for buy_order in buy_orders:
-                    if buy_order['status'] == 'closed':
-                        continue
-                    symbol = buy_order['symbol']
-                    current_price = get_current_price(symbol)
-                    timestamp = buy_order['buy_time']
-                    buy_price = buy_order['buy_price']
-                    buy_amount = buy_order['buy_amount']
-                    profit = (buy_amount * current_price) - (buy_price * buy_amount)
-                    if int(profit) < stoploss_percent:
-                        add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, profit, time.time())
-                    elif int(profit) > take_profit:
-                        add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, profit, last_timetamp)
+            last_run = last_timetamp # last timestamp in the data we got
+            # Check for stoploss and take profit on the timeframe
+            buy_orders = search_order()
+            for buy_order in buy_orders:
+                if buy_order['status'] == 'closed':
+                    continue
+                symbol = buy_order['symbol']
+                current_price = get_current_price(symbol)
+                timestamp = buy_order['buy_time']
+                buy_price = buy_order['buy_price']
+                buy_amount = buy_order['buy_amount']
+                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
+                #print("%s %s" % (profit, stoploss_percent))
+                if profit <= stoploss_percent:
+                    add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, profit, time.time())
+                elif profit >= take_profit:
+                    add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
