@@ -440,25 +440,25 @@ def main():
                                 add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                                 update_order(buy_time, current_price, profit, time.time())
 
-            last_run = last_timetamp # last timestamp in the data we got
-            # Check for stoploss and take profit on the timeframe
-            buy_orders = search_order()
-            for buy_order in buy_orders:
-                if buy_order['status'] == 'closed':
-                    continue
-                symbol = buy_order['symbol']
-                current_price = get_current_price(symbol)
-                timestamp = buy_order['buy_time']
-                buy_price = buy_order['buy_price']
-                buy_amount = buy_order['buy_amount']
-                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                #print("%s %s" % (profit, stoploss_percent))
-                if profit <= stoploss_percent:
-                    add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                    update_order(timestamp, current_price, profit, time.time())
-                elif profit >= take_profit:
-                    add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                    update_order(timestamp, current_price, profit, last_timetamp)
+                last_run = last_timetamp # last timestamp in the data we got
+                # Check for stoploss and take profit on the timeframe
+                buy_orders = search_order()
+                for buy_order in buy_orders:
+                    if buy_order['status'] == 'closed':
+                        continue
+                    symbol = buy_order['symbol']
+                    current_price = get_current_price(symbol)
+                    timestamp = buy_order['buy_time']
+                    buy_price = buy_order['buy_price']
+                    buy_amount = buy_order['buy_amount']
+                    profit = round(((current_price - buy_price) / buy_price) * 100, 2)
+                    #print("%s %s" % (profit, stoploss_percent))
+                    if profit <= stoploss_percent:
+                        add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(timestamp, current_price, profit, time.time())
+                    elif profit >= take_profit:
+                        add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
