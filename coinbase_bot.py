@@ -230,7 +230,6 @@ def print_orders(last_run, notes):
             profit_list.append(order['sell_profit'])
         p_l_a = (current_price - buy_price)
         p_l_p = round((p_l_a / buy_price) * 100, 2)
-        #p_l_p = 100 * p_l_a / ((current_price + buy_price) / 2)
         p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent;
         p_l_d = p_l_d - amount_spent
         if p_l_a > 0:
@@ -307,7 +306,6 @@ def telegram_bot():
                 ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
                 p_l_a = (current_price - buy_price)
                 p_l_p = round((p_l_a / buy_price) * 100, 2)
-                # = 100 * p_l_a / ((current_price + buy_price) / 2)
                 p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
                 p_l_d = p_l_d - amount_spent
                 order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_d,2), round(p_l_p,2), ts))
@@ -367,7 +365,7 @@ def main():
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                                 continue
-                            if open_order_count() > max_orders: # Already met our max open orders
+                            if open_order_count() >= max_orders: # Already met our max open orders
                                 add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                                 continue
                             if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
@@ -407,7 +405,7 @@ def main():
                             if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                                 add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                                 continue
-                            if open_order_count() > max_orders: # Already met our max open orders
+                            if open_order_count() >= max_orders: # Already met our max open orders
                                 add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                                 continue
                             if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
