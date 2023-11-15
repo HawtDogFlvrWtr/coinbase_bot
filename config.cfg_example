@@ -32,7 +32,7 @@ timeframe = 1h
 stoploss_percent = 10
 
 # The percent above 0 that you want to stoploss. Must be a positive number
-take_profit = 10
+take_profit = 5
 
 # The rsi value that the current rsi has to be above to buy. Default: 50
 rsi_buy_lt = 50
