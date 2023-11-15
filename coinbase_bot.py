@@ -191,9 +191,25 @@ def return_closed_profit():
     return sum(profit_list)
 
 def fetch_ohlcv_data(symbol):
-    ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe)
-    df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    return df
+    while True:
+        try:
+            ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe)
+            df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+            return df
+        except ccxt.InsufficientFunds as e:
+            time.sleep(5)
+        except ccxt.PermissionDenied as e:
+            time.sleep(5)
+        except ccxt.RequestTimeout as e:
+            time.sleep(5)
+        except ccxt.DDoSProtection as e:
+            time.sleep(5)
+        except ccxt.ExchangeNotAvailable as e:
+            time.sleep(5)
+        except ccxt.NetworkError as e:
+            time.sleep(5)
+        except ccxt.ExchangeError as e:
+            time.sleep(5)
 
 def macd_signals(df, symbol):
     fast = 12
@@ -256,12 +272,36 @@ def print_orders(last_run, notes):
 def get_current_price(symbol):
     global current_prices
     clean_symbol = symbol.replace('/', '-')
-    if clean_symbol in current_prices and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
-        current_price = current_prices[clean_symbol]['price']
-    else:
-        ticker = exchange.fetch_ticker(symbol)
-        current_price = ticker['last']
-    return current_price
+    while True:
+        if clean_symbol in current_prices and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
+            current_price = current_prices[clean_symbol]['price']
+            return current_price
+        else:
+            try:
+                ticker = exchange.fetch_ticker(symbol)
+                current_price = ticker['last']
+                return current_price
+            except ccxt.PermissionDenied as e:
+                add_note('%s - Failed fetching ticker with error: %s' % e)
+            except ccxt.RequestTimeout as e:
+                # recoverable error, do nothing and retry later
+                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                time.sleep(5)
+            except ccxt.DDoSProtection as e:
+                # recoverable error, you might want to sleep a bit here and retry later
+                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                time.sleep(5)
+            except ccxt.ExchangeNotAvailable as e:
+                # recoverable error, do nothing and retry later
+                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                time.sleep(5)
+            except ccxt.NetworkError as e:
+                # do nothing and retry later...
+                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                time.sleep(5)
+            except ccxt.ExchangeError as e:
+                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                time.sleep(5)
 
 def add_note(note):
     global telegram_userid
@@ -310,7 +350,7 @@ def telegram_bot():
                 p_l_d = p_l_d - amount_spent
                 order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_d,2), round(p_l_p,2), ts))
             bot.reply_to(message, "%s" % "\n".join(order_lines))
-        bot.polling()
+        bot.infinity_polling()
     except telebot.apihelper.ApiTelegramException as e:
         print("Telegram key is incorrect or config items missing.")
 
