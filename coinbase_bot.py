@@ -285,22 +285,22 @@ def get_current_price(symbol):
                 add_note('%s - Failed fetching ticker with error: %s' % e)
             except ccxt.RequestTimeout as e:
                 # recoverable error, do nothing and retry later
-                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.DDoSProtection as e:
                 # recoverable error, you might want to sleep a bit here and retry later
-                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeNotAvailable as e:
                 # recoverable error, do nothing and retry later
-                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.NetworkError as e:
                 # do nothing and retry later...
-                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeError as e:
-                add_note('%s - Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
+                add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
 
 def add_note(note):
