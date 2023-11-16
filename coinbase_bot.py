@@ -246,7 +246,7 @@ def print_orders(last_run, notes):
             profit_list.append(order['sell_profit'])
         p_l_a = (current_price - buy_price)
         p_l_p = round((p_l_a / buy_price) * 100, 2)
-        p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent;
+        p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
         p_l_d = p_l_d - amount_spent
         if p_l_a > 0:
             t.add_row([symbol, status, buy_price, current_price, "%s%s%s %s" % (G, round(p_l_d, 2), N, split_symbol[-1]), "%s%s%s %%" % (G, round(p_l_p, 2), N), ts])
