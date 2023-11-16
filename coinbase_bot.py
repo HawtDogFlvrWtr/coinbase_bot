@@ -264,7 +264,7 @@ def print_orders(last_run, notes):
         color = R
     else:
         color = N
-    print("Last Check: %s - Websocket Up: %s - Total P%: %s%s%s" % (last_run, ws_status, color, round(sum_profit,2), N))
+    print("Last Check: %s - Websocket Up: %s - Total P%%: %s%s%s" % (last_run, ws_status, color, round(sum_profit,2), N))
     status = t.get_string(sortby="Order Time")
     print(status)
     print('\n'.join(notes))
