@@ -199,18 +199,25 @@ def fetch_ohlcv_data(symbol):
             df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             return df
         except ccxt.InsufficientFunds as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.PermissionDenied as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.RequestTimeout as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.DDoSProtection as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.ExchangeNotAvailable as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.NetworkError as e:
+            exchange_issues +=1
             time.sleep(5)
         except ccxt.ExchangeError as e:
+            exchange_issues +=1
             time.sleep(5)
 
 def macd_signals(df, symbol):
@@ -284,24 +291,30 @@ def get_current_price(symbol):
                 current_price = ticker['last']
                 return current_price
             except ccxt.PermissionDenied as e:
+                exchange_issues +=1
                 add_note('%s - Failed fetching ticker with error: %s' % e)
             except ccxt.RequestTimeout as e:
+                exchange_issues +=1
                 # recoverable error, do nothing and retry later
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.DDoSProtection as e:
+                exchange_issues +=1
                 # recoverable error, you might want to sleep a bit here and retry later
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeNotAvailable as e:
+                exchange_issues +=1
                 # recoverable error, do nothing and retry later
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.NetworkError as e:
+                exchange_issues +=1
                 # do nothing and retry later...
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeError as e:
+                exchange_issues +=1
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
 
@@ -517,18 +530,23 @@ def main():
             else:
                 time.sleep(1)
         except ccxt.RequestTimeout as e:
+            exchange_issues +=1
             # recoverable error, do nothing and retry later
             add_note(e)
         except ccxt.DDoSProtection as e:
+            exchange_issues +=1
             # recoverable error, you might want to sleep a bit here and retry later
             add_note(e)
         except ccxt.ExchangeNotAvailable as e:
+            exchange_issues +=1
             # recoverable error, do nothing and retry later
             add_note(e)
         except ccxt.NetworkError as e:
+            exchange_issues +=1
             # do nothing and retry later...
             add_note(e)
         except ccxt.ExchangeError as e:
+            exchange_issues +=1
             add_note(e)
             time.sleep(10)
         #except Exception as e:
