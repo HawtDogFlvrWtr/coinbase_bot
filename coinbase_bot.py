@@ -504,18 +504,18 @@ def main():
                 time.sleep(1)
         except ccxt.RequestTimeout as e:
             # recoverable error, do nothing and retry later
-            add_note(type(e).__name__, str(e))
+            add_note(e)
         except ccxt.DDoSProtection as e:
             # recoverable error, you might want to sleep a bit here and retry later
-            add_note(type(e).__name__, str(e))
+            add_note(e)
         except ccxt.ExchangeNotAvailable as e:
             # recoverable error, do nothing and retry later
-            add_note(type(e).__name__, str(e))
+            add_note(e)
         except ccxt.NetworkError as e:
             # do nothing and retry later...
-            add_note(type(e).__name__, str(e))
+            add_note(e)
         except ccxt.ExchangeError as e:
-            add_note(type(e).__name__, str(e))
+            add_note(e)
             time.sleep(10)
         #except Exception as e:
         #    # panic and halt the execution in case of any other error
