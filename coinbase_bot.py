@@ -321,38 +321,43 @@ def calculate_sma(df, period):
 
 def telegram_bot():
     global bot
-    try:
-        @bot.message_handler(commands=['help'])
-        def handle_help(message):
-            # Provide a list of available commands and their descriptions
-            help_text = '''
-            Available commands:
-            - /help: Show available commands and descriptions.
-            - /orders: Display your open orders or trade history.
-            '''
-            bot.reply_to(message, help_text)
-
-        @bot.message_handler(commands=['orders'])
-        def handle_help(message):
-            order_lines = []
-            order_lines.append('| Symbol | Buy Price | Current Price | P$ | P% | Order Time |')
-            order_list = db.search(Orders.status == 'open')
-            for order in order_list:
-                symbol = order['symbol']
-                buy_price = order['buy_price']
-                buy_amount = order['buy_amount']
-                amount_spent = buy_price * buy_amount
-                current_price = get_current_price(symbol)
-                ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
-                p_l_a = (current_price - buy_price)
-                p_l_p = round((p_l_a / buy_price) * 100, 2)
-                p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
-                p_l_d = p_l_d - amount_spent
-                order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_d,2), round(p_l_p,2), ts))
-            bot.reply_to(message, "%s" % "\n".join(order_lines))
-        bot.infinity_polling()
-    except telebot.apihelper.ApiTelegramException as e:
-        print("Telegram key is incorrect or config items missing.")
+    while True:
+        try:
+            @bot.message_handler(commands=['help'])
+            def handle_help(message):
+                # Provide a list of available commands and their descriptions
+                help_text = '''
+                Available commands:
+                - /help: Show available commands and descriptions.
+                - /orders: Display your open orders or trade history.
+                '''
+                bot.reply_to(message, help_text)
+    
+            @bot.message_handler(commands=['orders'])
+            def handle_help(message):
+                order_lines = []
+                order_lines.append('| Symbol | Buy Price | Current Price | P$ | P% | Order Time |')
+                order_list = db.search(Orders.status == 'open')
+                for order in order_list:
+                    symbol = order['symbol']
+                    buy_price = order['buy_price']
+                    buy_amount = order['buy_amount']
+                    amount_spent = buy_price * buy_amount
+                    current_price = get_current_price(symbol)
+                    ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
+                    p_l_a = (current_price - buy_price)
+                    p_l_p = round((p_l_a / buy_price) * 100, 2)
+                    p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
+                    p_l_d = p_l_d - amount_spent
+                    order_lines.append("| %s | %s | %s | %s | %s | %s |" % (symbol, buy_price, current_price, round(p_l_d,2), round(p_l_p,2), ts))
+                bot.reply_to(message, "%s" % "\n".join(order_lines))
+            bot.infinity_polling()
+        except telebot.apihelper.ApiTelegramException as e:
+            print("Telegram key is incorrect or config items missing.")
+        except:
+            add_note('Telegram servers went away. Sleeping and trying again.')
+            time.sleep(5)
+        
 
 # Start telegram bot thread
 t_worker = Thread(target=telegram_bot, args=())
