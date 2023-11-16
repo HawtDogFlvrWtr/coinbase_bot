@@ -24,6 +24,8 @@ args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
 sleep_lookup = {'1m': 60, '1h': 3600, '1d': 84000} # Added second to give the exchange time to update the candles
+start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
+exchange_issues = 0
 
 config = configparser.ConfigParser()
 config.read(config_file)
@@ -264,7 +266,7 @@ def print_orders(last_run, notes):
         color = R
     else:
         color = N
-    print("Last Check: %s - Websocket Up: %s - Total P%%: %s%s%s" % (last_run, ws_status, color, round(sum_profit,2), N))
+    print("Last Check: %s - Total P%%: %s%s%s" % (last_run, color, round(sum_profit,2), N))
     status = t.get_string(sortby="Order Time")
     print(status)
     print('\n'.join(notes))
@@ -321,18 +323,25 @@ def calculate_sma(df, period):
 
 def telegram_bot():
     global bot
+    global exchange_issues
     while True:
         try:
             @bot.message_handler(commands=['help'])
             def handle_help(message):
                 # Provide a list of available commands and their descriptions
-                help_text = '''
-                Available commands:
-                - /help: Show available commands and descriptions.
-                - /orders: Display your open orders or trade history.
-                '''
+                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.'''
                 bot.reply_to(message, help_text)
-    
+
+            @bot.message_handler(commands=['status'])
+            def handle_status(message):
+                status_pull = exchange.fetchStatus()
+                status = status_pull['status']
+                updated = status_pull['updated']
+                eta = status_pull['eta']
+                url = status_pull['url']
+                string = 'Bot start time: %s\nWebsocket Connected: %s\nExchange issue count: %s\n\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n' % (start_time, ws_status, exchange_issues, status, eta, url)
+                bot.reply_to(message, string)
+
             @bot.message_handler(commands=['orders'])
             def handle_help(message):
                 order_lines = []
