@@ -283,6 +283,7 @@ def print_orders(last_run, notes):
 
 def get_current_price(symbol):
     global current_prices
+    global exchange_issues
     clean_symbol = symbol.replace('/', '-')
     while True:
         if clean_symbol in current_prices and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
