@@ -291,34 +291,37 @@ def get_current_price(symbol):
             return current_price
         else:
             try:
-                ticker = exchange.fetch_ticker(symbol)
-                current_price = ticker['last']
+                tickers = exchange.fetch_tickers()
+                for ticker in tickers:
+                    timestamp = time.time()
+                    current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
+                current_price = current_prices[symbol]['price']
                 return current_price
             except ccxt.PermissionDenied as e:
-                exchange_issues +=1
-                add_note('%s - Failed fetching ticker with error: %s' % e)
+                exchange_issues += 1
+                add_note('Failed fetching ticker with error: %s' % e)
             except ccxt.RequestTimeout as e:
-                exchange_issues +=1
                 # recoverable error, do nothing and retry later
+                exchange_issues += 1
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.DDoSProtection as e:
-                exchange_issues +=1
+                exchange_issues += 1
                 # recoverable error, you might want to sleep a bit here and retry later
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeNotAvailable as e:
-                exchange_issues +=1
+                exchange_issues += 1
                 # recoverable error, do nothing and retry later
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.NetworkError as e:
-                exchange_issues +=1
+                exchange_issues += 1
                 # do nothing and retry later...
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
             except ccxt.ExchangeError as e:
-                exchange_issues +=1
+                exchange_issues += 1
                 add_note('Failed fetching ticker with error: %s. Sleeping 5 seconds and trying again.' % e)
                 time.sleep(5)
 
