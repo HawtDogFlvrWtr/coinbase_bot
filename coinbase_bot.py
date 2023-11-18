@@ -26,6 +26,7 @@ config_file = args.config_file
 sleep_lookup = {'1m': 60, '1h': 3600, '1d': 84000} # Added second to give the exchange time to update the candles
 start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
 exchange_issues = 0
+ws_restarts = 0
 
 config = configparser.ConfigParser()
 config.read(config_file)
@@ -53,7 +54,7 @@ bot_log = 'bot_logs.txt'
 
 notes = []
 current_prices = {}
-ws_status = False
+ws_status = 'Down'
 
 max_order_amount = buy_percent / 100 * spend_dollars
 max_orders = int(spend_dollars / max_order_amount)
@@ -93,6 +94,7 @@ def ws_daemon():
     global ws
     global symbols
     global ws_status
+    global ws_restarts
     channel = "ticker"
     timestamp = str(int(time.time()))
     product_ids = []
@@ -100,40 +102,41 @@ def ws_daemon():
         product_ids.append(symbol.replace("/", '-'))
     product_ids_str = ",".join(product_ids)
     while True:
-        ws_status = False
-        message = f"{timestamp}{channel}{product_ids_str}"
-        signature = hmac.new(secret.encode("utf-8"), message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
-
-        ws = create_connection("wss://advanced-trade-ws.coinbase.com")
-        ws.send(
-            json.dumps(
-                {
-                    "type": "subscribe",
-                    "product_ids": product_ids,
-                    "channel": channel,
-                    "api_key": api_key,
-                    "timestamp": timestamp,
-                    "signature": signature,
-                }
+        ws_status = 'Up'
+        try:
+            message = f"{timestamp}{channel}{product_ids_str}"
+            signature = hmac.new(secret.encode("utf-8"), message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
+            ws = create_connection("wss://advanced-trade-ws.coinbase.com")
+            ws.send(
+                json.dumps(
+                    {
+                        "type": "subscribe",
+                        "product_ids": product_ids,
+                        "channel": channel,
+                        "api_key": api_key,
+                        "timestamp": timestamp,
+                        "signature": signature,
+                    }
+                )
             )
-        )
-        while ws.connected:
-            ws_status = True
-            data = ws.recv()
-            if data != "":
-                msg = json.loads(data)
-                if 'events' not in msg: # Because why not, Coinbase
-                    continue
-                for event in msg['events']:
-                    if 'tickers' not in event:
+            while ws.connected:
+                data = ws.recv()
+                if data != "":
+                    msg = json.loads(data)
+                    if 'events' not in msg: # Because why not, Coinbase
                         continue
-                    for ticker in event['tickers']:
-                        timestamp = time.time()
-                        current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': timestamp}
-                        for coin in current_prices: # Got an update from another coin so WS is still up. lets push the timestamp to everyone.
-                            current_prices[coin]['timestamp'] = timestamp
-        ws.close
-        time.sleep(5)
+                    for event in msg['events']:
+                        if 'tickers' not in event:
+                            continue
+                        for ticker in event['tickers']:
+                            timestamp = time.time()
+                            current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': timestamp}
+                            for coin in current_prices: # Got an update from another coin so WS is still up. lets push the timestamp to everyone.
+                                current_prices[coin]['timestamp'] = timestamp
+        except WebSocketConnectionClosedException as e:
+            ws_restarts += 1
+            ws_status = 'Down'
+            pass
 
 # Start websocket thread
 worker = Thread(target=ws_daemon, args=())
@@ -337,36 +340,41 @@ def calculate_sma(df, period):
 def telegram_bot():
     global bot
     global exchange_issues
+    global ws_status
+    global ws_restarts
     while True:
         try:
             @bot.message_handler(commands=['help'])
             def handle_help(message):
+                print(message)
+                bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
                 help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.'''
                 bot.reply_to(message, help_text)
 
             @bot.message_handler(commands=['status'])
             def handle_status(message):
+                bot.send_chat_action(message.chat.id, 'typing')
                 status_pull = exchange.fetchStatus()
                 status = status_pull['status']
-                updated = status_pull['updated']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = 'Bot start time: %s\nWebsocket Connected: %s\nExchange issue count: %s\n\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n' % (start_time, ws_status, exchange_issues, status, eta, url)
+                string = 'Bot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])
-            def handle_help(message):
+            def handle_orders(message):
+                bot.send_chat_action(message.chat.id, 'typing')
                 order_lines = []
                 order_lines.append('| Symbol | Buy Price | Current Price | P$ | P% | Order Time |')
-                order_list = db.search(Orders.status == 'open')
+                order_list = db.search(Orders.status == 'buy_open')
                 for order in order_list:
                     symbol = order['symbol']
-                    buy_price = order['buy_price']
-                    buy_amount = order['buy_amount']
+                    buy_price = order['price']
+                    buy_amount = order['amount']
                     amount_spent = buy_price * buy_amount
                     current_price = get_current_price(symbol)
-                    ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
+                    ts = datetime.datetime.fromtimestamp(order['timestamp']).strftime('%m-%d-%Y %H:%M:%S')
                     p_l_a = (current_price - buy_price)
                     p_l_p = round((p_l_a / buy_price) * 100, 2)
                     p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
@@ -376,9 +384,6 @@ def telegram_bot():
             bot.infinity_polling()
         except telebot.apihelper.ApiTelegramException as e:
             print("Telegram key is incorrect or config items missing.")
-        except:
-            add_note('Telegram servers went away. Sleeping and trying again.')
-            time.sleep(5)
         
 
 # Start telegram bot thread
