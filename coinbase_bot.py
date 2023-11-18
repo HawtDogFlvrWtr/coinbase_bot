@@ -375,11 +375,11 @@ def telegram_bot():
                 order_list = db.search(Orders.status == 'open')
                 for order in order_list:
                     symbol = order['symbol']
-                    buy_price = order['price']
-                    buy_amount = order['amount']
+                    buy_price = order['buy_price']
+                    buy_amount = order['buy_amount']
                     amount_spent = buy_price * buy_amount
                     current_price = get_current_price(symbol)
-                    ts = datetime.datetime.fromtimestamp(order['timestamp']).strftime('%m-%d-%Y %H:%M:%S')
+                    ts = datetime.datetime.fromtimestamp(order['buy_time']).strftime('%m-%d-%Y %H:%M:%S')
                     p_l_a = (current_price - buy_price)
                     p_l_p = round((p_l_a / buy_price) * 100, 2)
                     p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent
@@ -399,7 +399,7 @@ t_worker.start()
 
 def main():
     # To preload my order
-    #insert_order('open', 'SHIB/USD', 77416742.61585483, 1698787595, 0.00000768)
+    #insert_order('open', 'SHIB/USD', 77416742.61585483, 1698787595, 1698787595, 0.00000768)
     global since_start
     global notes
     last_run = None
@@ -531,9 +531,9 @@ def main():
                     if profit <= stoploss_percent:
                         add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, profit, time.time())
-                    elif profit >= take_profit:
-                        add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        update_order(timestamp, current_price, profit, last_timetamp)
+                    #elif profit >= take_profit:
+                    #    add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                    #    update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
