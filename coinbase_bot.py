@@ -196,6 +196,7 @@ def return_closed_profit():
     return sum(profit_list)
 
 def fetch_ohlcv_data(symbol):
+    global exchange_issues
     while True:
         try:
             ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe)
