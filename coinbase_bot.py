@@ -371,7 +371,7 @@ def telegram_bot():
                 bot.send_chat_action(message.chat.id, 'typing')
                 order_lines = []
                 order_lines.append('| Symbol | Buy Price | Current Price | P$ | P% | Order Time |')
-                order_list = db.search(Orders.status == 'buy_open')
+                order_list = db.search(Orders.status == 'open')
                 for order in order_list:
                     symbol = order['symbol']
                     buy_price = order['price']
