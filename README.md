@@ -26,6 +26,12 @@ Install dependencies
 
 ```
 
+Rename the example config
+
+```bash
+  mv config.cfg_example config.cfg
+```
+
 Start the app with default settings
 
 ```bash
