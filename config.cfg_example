@@ -21,7 +21,7 @@ buy_percent = 10
 allow_duplicates = True
 
 [bot-config]
-# risky: MACD/MACDS + RSI -or- safe: SMA Only. Suggested: risky
+# risky: MACD/MACDS + RSI -or- safe: SMA Only. Suggested: risky (THIS IS NO LONGER USED IN THE FINAL BOT)
 risk_level = risky
 
 # The interval on the candles that signals are looked for, and how often it attempts to look. 
@@ -44,4 +44,6 @@ rsi_sell_gt = 50
 buy_when_higher = True
 
 # Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
-symbols: ["BTC/USD","ETH/USD","SHIB/USD","DOGE/USD","SOL/USD","LINK/USD","AAVE/USD","XRP/USD"]
+# There are issues with tokens well below 1 penny, so we suggest you stay away from SHIB for now.
+symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
+#symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD"]
