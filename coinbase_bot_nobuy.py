@@ -1,3 +1,5 @@
+# This bot will play along but won't buy anything.
+
 import argparse
 import configparser
 import datetime
