@@ -29,7 +29,11 @@ Install dependencies
 Start the app with default settings
 
 ```bash
+  # If you want to make real buys and sells
   python3 coinbase_bot.py
+
+  # If you just want to play along with fake money
+  python3 coinbase_bot_nobuy.py
 ```
 
 Start the app with custom database or config
