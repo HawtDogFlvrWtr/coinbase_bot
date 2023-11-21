@@ -59,7 +59,7 @@ options:
 
 ## Running Backtests
 
-The backtester doesn't use your config file, so you can run it without making changes to your config file.
+The backtester doesn't use your config file for anything but your api information, so you can run it without making changes to your config file.
 
 ```bash
   # Create backtesting data folder
