@@ -96,9 +96,9 @@ options:
 
 ## Backtesting Results from 1-1-2023 until 11-21-2023
 ```
-TakeProfit 10%, Stoploss 10%, RSI 50/50, Profit: 409.09%
-TakeProfit 5%, Stoploss 20%, RSI 50/50,  Profit: 667.33%
-TakeProfit 5%, Stoploss 10%, RSI 50/50,  Profit: 335.31%
+TakeProfit 10%, Stoploss 10%, RSI 50/50,  Profit: 409.09%
+TakeProfit 5%,  Stoploss 20%, RSI 50/50,  Profit: 667.33%
+TakeProfit 5%,  Stoploss 10%, RSI 50/50,  Profit: 335.31%
 TakeProfit 20%, Stoploss 20%, RSI 50/50,  Profit: 756.94%
 ```
 
