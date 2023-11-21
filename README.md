@@ -11,7 +11,7 @@ This bot buys and sells on Coinbase.com, using MACD/MACDs + RSI strategies to do
 Clone the project
 
 ```bash
-  https://github.com/HawtDogFlvrWtr/coinbase_bot.git
+  git clone https://github.com/HawtDogFlvrWtr/coinbase_bot.git
 ```
 
 Go to the project directory
