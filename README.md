@@ -93,6 +93,15 @@ options:
   -sl STOPLOSS_PERCENT, --stoploss_percent STOPLOSS_PERCENT
                         The start time for backtesting
 ```
+
+## Backtesting Results from 1-1-2023 until 11-21-2023
+```
+TakeProfit 10%, Stoploss 10%, RSI 50/50, Profit: 409.09%
+TakeProfit 5%, Stoploss 20%, RSI 50/50,  Profit: 667.33%
+TakeProfit 5%, Stoploss 10%, RSI 50/50,  Profit: 335.31%
+TakeProfit 20%, Stoploss 20%, RSI 50/50,  Profit: 756.94%
+```
+
 ## Support
 
 I have made every attempt to ensure the accuracy and reliability of this application. However, this application is provided "as is" without warranty or support of any kind. I do not accept any  responsibility or liability for the accuracy, content, completeness, legality, or reliability of this application. Donations are welcome but doing so does not provide you support for this project.
