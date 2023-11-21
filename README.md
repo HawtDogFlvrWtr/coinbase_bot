@@ -71,7 +71,7 @@ The backtester doesn't use your config file for anything but your api informatio
   # Start the backtester
   python3 coinbase_bot_backtester.py
 ```
-Backtesting defaults to Jan 1 2023 (1672534800) onward, but can bet set with the -s setting parameter. The value should be in epoch [https://www.epochconverter.com/]. Backtesting can take a very long time, but i'm hoping to improve performance in the future. The more data you backtest, the longer it will take. The backtester
+Backtesting defaults to Jan 1 2023 (1672534800) onward, but can bet set with the -s setting parameter. The value should be in epoch [https://www.epochconverter.com/]. Backtesting can take a very long time, but i'm hoping to improve performance in the future. The more data you backtest, the longer it will take, obviously.
 
 ```bash
 usage: coinbase_bot_backtester.py [-h] [-o ORDERS_FILE] [-c CONFIG_FILE] [-s START_TIME] [-rb RSI_BUY_LT] [-rs RSI_SELL_GT] [-t TAKE_PROFIT] [-sl STOPLOSS_PERCENT]
