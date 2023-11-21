@@ -221,34 +221,34 @@ def main():
                         sold += 1
                         print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, profit, last_timestamp)
-            buy_orders = search_order(symbol)
-            for buy_order in buy_orders:
-                if buy_order['status'] == 'closed':
-                    continue
-                timestamp = buy_order['buy_time']
-                buy_price = buy_order['buy_price']
-                buy_amount = buy_order['buy_amount']
-                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-
-                if profit <= stoploss_percent:
-                    profit_list.append(profit)
-                    stoploss += 1
-                    print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                    update_order(timestamp, current_price, profit, last_timestamp)
-                elif profit >= take_profit:
-                    profit_list.append(profit)
-                    take_profit_count += 1
-                    print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                    update_order(timestamp, current_price, profit, last_timestamp)
-            if last_profit != sum(profit_list):
-                print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
-                last_profit = sum(profit_list)
-        since_start = int(last_timestamp + sleep_lookup[timeframe])
-        if last_timestamp == last_last_timestamp:
+                buy_orders = search_order(symbol)
+                for buy_order in buy_orders:
+                    if buy_order['status'] == 'closed':
+                        continue
+                    timestamp = buy_order['buy_time']
+                    buy_price = buy_order['buy_price']
+                    buy_amount = buy_order['buy_amount']
+                    profit = round(((current_price - buy_price) / buy_price) * 100, 2)
+    
+                    if profit <= stoploss_percent:
+                        profit_list.append(profit)
+                        stoploss += 1
+                        print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(timestamp, current_price, profit, last_timestamp)
+                    elif profit >= take_profit:
+                        profit_list.append(profit)
+                        take_profit_count += 1
+                        print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(timestamp, current_price, profit, last_timestamp)
+                if last_profit != sum(profit_list):
+                    print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
+                    last_profit = sum(profit_list)
+        since_start = int(since_start + sleep_lookup[timeframe])
+        if since_start > time.time():
             print("Backtesting finished")
             sys.exit(0)
         else:
-            last_last_timestamp = last_timestamp
+            last_last_timestamp = since_start
 
 if __name__ == "__main__":
     main()
