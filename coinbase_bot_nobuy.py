@@ -533,9 +533,9 @@ def main():
                     if profit <= stoploss_percent:
                         add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         update_order(timestamp, current_price, profit, time.time())
-                    #elif profit >= take_profit:
-                    #    add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                    #    update_order(timestamp, current_price, profit, last_timetamp)
+                    elif profit >= take_profit:
+                        add_note('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(timestamp, current_price, profit, last_timetamp)
             print_orders(last_run, notes)
             if ws_status:
                 time.sleep(0.25)  # Sleep for timeframe
