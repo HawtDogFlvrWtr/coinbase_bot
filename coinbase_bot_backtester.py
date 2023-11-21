@@ -162,7 +162,6 @@ def main():
     buy = 0
     fetch_ohlcv_data()
     last_timestamp = time.time() # In case nothing comes through, we set this to now.
-    last_last_timestamp = 0
     while True:
         time_readable = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
         for symbol in symbols:
@@ -246,10 +245,8 @@ def main():
         since_start = int(since_start + sleep_lookup[timeframe])
         if since_start > time.time():
             print("Backtesting finished")
-            print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
+            print("Final Profit %s%%" % (time_readable, round(sum(profit_list), 2)))
             sys.exit(0)
-        else:
-            last_last_timestamp = since_start
 
 if __name__ == "__main__":
     main()
