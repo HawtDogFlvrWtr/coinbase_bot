@@ -100,6 +100,7 @@ TakeProfit 10%, Stoploss 10%, RSI 50/50,  Profit: 409.09%
 TakeProfit 5%,  Stoploss 20%, RSI 50/50,  Profit: 667.33%
 TakeProfit 5%,  Stoploss 10%, RSI 50/50,  Profit: 335.31%
 TakeProfit 20%, Stoploss 20%, RSI 50/50,  Profit: 756.94%
+TakeProfit 30%, Stoploss 30%, RSI 50/50,  Profit: 588.28%
 ```
 
 ## Support
