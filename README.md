@@ -23,7 +23,7 @@ Go to the project directory
 Install dependencies
 
 ```bash
-  pip3 pillow websocket-client telebot tinydb prettytable pandas_ta pandas ccxt
+  pip3 install pillow websocket-client telebot tinydb prettytable pandas_ta pandas ccxt
 
 ```
 
