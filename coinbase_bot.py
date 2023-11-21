@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='cbb_database.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
 
-print('\033[0;31;40mI have made every attempt to ensure the accuracy and reliability of this application.\nHowever, this application is provided "as is" without warranty or support of any kind.\nnI do not accept any responsibility or liability for the accuracy, content, completeness,\nlegality, or reliability of this application. Donations are welcome but doing so does not\nprovide you support for this project.\n\nBTC Wallet: 3CyQ5LW9Ycuuu8Ddr5de5goWRh95C4rN8E\nETH Wallet: 0x7eBEe95Af86Ed7f4B0eD29A322F1b811AD61DF36\nSHIB Wallet: 0x8cCc65a7786Bd5bf74E884712FF55C63b36B0112\n\nUse this application at your own risk.\033[0m')
+print('\033[0;31;40mI have made every attempt to ensure the accuracy and reliability of this application.\nHowever, this application is provided "as is" without warranty or support of any kind.\nI do not accept any responsibility or liability for the accuracy, content, completeness,\nlegality, or reliability of this application. Donations are welcome but doing so does not\nprovide you support for this project.\n\nBTC Wallet: 3CyQ5LW9Ycuuu8Ddr5de5goWRh95C4rN8E\nETH Wallet: 0x7eBEe95Af86Ed7f4B0eD29A322F1b811AD61DF36\nSHIB Wallet: 0x8cCc65a7786Bd5bf74E884712FF55C63b36B0112\n\nUse this application at your own risk.\033[0m')
 time.sleep(5)
 
 # Argument setup
