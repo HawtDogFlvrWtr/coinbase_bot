@@ -190,7 +190,7 @@ def main():
                     if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                         #print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                         continue
-                    if open_order_count() > max_orders: # Already met our max open orders
+                    if open_order_count() >= max_orders: # Already met our max open orders
                         #print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                         continue
                     if buy_when_higher == 'False' and last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
