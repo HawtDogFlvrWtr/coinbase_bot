@@ -165,7 +165,6 @@ def main():
     last_last_timestamp = 0
     while True:
         time_readable = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
-        print("Processing %s" % time_readable)
         for symbol in symbols:
             df = overall_df[symbol]
             index = 0
@@ -189,13 +188,13 @@ def main():
                 if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
                     # Prevent duplicate coin
                     if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                        print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                        #print('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
                         continue
                     if open_order_count() > max_orders: # Already met our max open orders
-                        print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                        #print('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
                         continue
                     if buy_when_higher == 'False' and last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
-                        print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                        #print('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
                         continue
                     # DO BUY
                     buy_amount = max_order_amount / current_price
@@ -216,7 +215,7 @@ def main():
                         buy_price = buy_order['buy_price']
                         buy_amount = buy_order['buy_amount']
                         profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                        if profit < 0:
+                        if profit < 0.5:
                             continue
                         profit_list.append(profit)
                         sold += 1
@@ -242,7 +241,7 @@ def main():
                     print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                     update_order(timestamp, current_price, profit, last_timestamp)
             if last_profit != sum(profit_list):
-                print("Profit on %s: %s" % (time_readable, sum(profit_list)))
+                print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
                 last_profit = sum(profit_list)
         since_start = int(last_timestamp + sleep_lookup[timeframe])
         if last_timestamp == last_last_timestamp:
