@@ -27,12 +27,10 @@ Install dependencies
 
 ```
 
-Rename the example config
+Rename the example config and add your settings. We recommend leaving everything under bot-config alone for now
 
 ```bash
   mv config.cfg_example config.cfg
-
-  Update the config to include your settings. We recommend you leave everything in bot-config alone.
 ```
 
 Start the app with default settings
