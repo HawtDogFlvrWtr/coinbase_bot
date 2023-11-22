@@ -106,11 +106,11 @@ TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1002.87%
 
 ## Backtesting Results from 5-1-2016 until 11-21-2023
 ```
-TakeProfit 5%, Stoploss -20%, RSI 50/50, Profit: 1446.09%
+TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit: 1446.09%
 TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit: 2715.34%
 TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit: 3205.16%
 TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit: 4342.37%
-TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit: 5703.9%
+TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit: 5703.09%
 ```
 
 ## Support
