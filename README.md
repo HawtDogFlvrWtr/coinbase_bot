@@ -96,11 +96,17 @@ options:
 
 ## Backtesting Results from 1-1-2023 until 11-21-2023
 ```
-TakeProfit 10%, Stoploss 10%, RSI 50/50,  Profit: 409.09%
-TakeProfit 5%,  Stoploss 20%, RSI 50/50,  Profit: 667.33%
-TakeProfit 5%,  Stoploss 10%, RSI 50/50,  Profit: 335.31%
-TakeProfit 20%, Stoploss 20%, RSI 50/50,  Profit: 756.94%
-TakeProfit 30%, Stoploss 30%, RSI 50/50,  Profit: 588.28%
+TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit  372.20%
+TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit  639.13%
+TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit  690.05%
+TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit  702.70%
+TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit  833.17%
+TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1002.87%
+```
+
+## Backtesting Results from 6-1-2012 until 11-21-2023
+```
+TBD
 ```
 
 ## Support
