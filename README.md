@@ -31,6 +31,8 @@ Rename the example config
 
 ```bash
   mv config.cfg_example config.cfg
+
+  Update the config to include your settings. We recommend you leave everything in bot-config alone.
 ```
 
 Start the app with default settings
