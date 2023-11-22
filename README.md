@@ -65,7 +65,7 @@ The backtester doesn't use your config file for anything but your api informatio
   # Create backtesting data folder
   mkdir backtesting_data
 
-  # Download the historical data for your symbols
+  # Download the historical data for your symbols. You can/should make this run hourly via cron (0 * * * *) so you always have the latest backtesting data available
   python3 download_backtest_data.py
 
   # Start the backtester
