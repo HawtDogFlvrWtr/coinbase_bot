@@ -14,7 +14,6 @@ from prettytable import PrettyTable
 from tinydb import TinyDB, Query
 from threading import Thread
 import telebot
-from PIL import Image, ImageDraw, ImageFont
 from websocket import create_connection, WebSocketConnectionClosedException # websocket-client
 
 parser = argparse.ArgumentParser()
@@ -278,24 +277,26 @@ def return_closed_profit():
 
 # Pull latest candles and throw into a dataframe
 def fetch_ohlcv_data(symbol):
+    global exchange_issues
     while True: # If we don't return, repeat until we do
         try:
             ohlcv_data = exchange.fetch_ohlcv(symbol, timeframe)
             df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             return df
-        except ccxt.InsufficientFunds as e:
-            pass
-        except ccxt.PermissionDenied as e:
-            pass
         except ccxt.RequestTimeout as e:
+            exchange_issues += 1
             pass
         except ccxt.DDoSProtection as e:
+            exchange_issues += 1
             pass
         except ccxt.ExchangeNotAvailable as e:
+            exchange_issues += 1
             pass
         except ccxt.NetworkError as e:
+            exchange_issues += 1
             pass
         except ccxt.ExchangeError as e:
+            exchange_issues += 1
             pass
        
 # Generate macd information for the signals
@@ -315,9 +316,9 @@ def print_orders(last_run = None):
     global current_prices
     global ws_status
     if not last_run:
-        t = PrettyTable(['Symbol', 'Current Price', 'P%', 'Order Time'])
+        t = PrettyTable(['Sym.', 'S.', 'Cur. Price', 'P%', 'Time'])
     else:
-        t = PrettyTable(['Symbol', 'Side', 'Buy Price', 'Current Price', 'P$', 'P%', 'Order Time'])
+        t = PrettyTable(['Symbol', 'Side', 'Buy Price', 'Current Price', 'P$', 'P%', 'Time'])
     R = "\033[0;31;40m" #RED
     G = "\033[0;32;40m" # GREEN
     N = "\033[0m" # Reset
@@ -335,10 +336,9 @@ def print_orders(last_run = None):
         ts = datetime.datetime.fromtimestamp(order['timestamp']).strftime('%m-%d-%Y %H:%M')
         p_l_a = (current_price - buy_price)
         p_l_p = round((p_l_a / buy_price) * 100, 2)
-        p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent) + amount_spent;
-        p_l_d = p_l_d - amount_spent
+        p_l_d = (p_l_a / ((current_price + buy_price) / 2) * amount_spent)
         if not last_run:
-            t.add_row([symbol, current_price, "%s %%" % (round(p_l_p, 2)), ts])
+            t.add_row([symbol, side, current_price, "%s %%" % (round(p_l_p, 2)), ts])
         else:
             if p_l_a > 0:
                 t.add_row([symbol, side, buy_price, current_price, "%s%s%s %s" % (G, round(p_l_d, 2), N, split_symbol[-1]), "%s%s%s %%" % (G, round(p_l_p, 2), N), ts])
@@ -353,7 +353,7 @@ def print_orders(last_run = None):
         last_run = datetime.datetime.fromtimestamp(last_run).strftime('%m-%d-%Y %H:%M')
         print("Last Check: %s - Open Orders: %s/%s" % (last_run, open_orders, max_orders))
 
-    status = t.get_string(sortby="Order Time")
+    status = t.get_string(sortby="Time")
     return status
 
 # Get current price from websocket info if it's not stale, and if so get all tickers and update them via the standard v2 api
@@ -373,8 +373,6 @@ def get_current_price(symbol):
                     current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
                 current_price = current_prices[symbol]['price']
                 return current_price
-            except ccxt.PermissionDenied as e:
-                exchange_issues += 1
             except ccxt.RequestTimeout as e:
                 exchange_issues += 1
             except ccxt.DDoSProtection as e:
@@ -404,10 +402,6 @@ def check_unfilled_orders():
             if side == 'buy': # Make sure we don't change buy side until we close the sell.
                 status = 'buy_open'
             db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
-        except ccxt.InsufficientFunds as e:
-            exchange_issues += 1
-        except ccxt.PermissionDenied as e:
-            exchange_issues += 1
         except ccxt.RequestTimeout as e:
             exchange_issues += 1
         except ccxt.DDoSProtection as e:
@@ -423,7 +417,7 @@ def check_unfilled_orders():
 def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
     global exchange_issues
     formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
-    formatted_price = str("{:f}".format(current_price))
+    formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
         buy_return = exchange.createOrder(symbol, 'limit', 'buy', formatted_amount, formatted_price, { 'clientOrderId': "%s-%s-buy" % (buy_time, symbol) })
         return buy_return
@@ -461,43 +455,44 @@ def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
         return False
     
 # Attempt sell # TODO: Figure out why SHIB won't sell right.
-def attempt_sell(buy_time, note_timestamp, buy_amount, symbol, current_price, profit):
+def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit):
     global exchange_issues
-    current_price = str("{:f}".format(current_price))
+    formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
+    current_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
-        sell_return = exchange.createOrder(symbol, 'limit', 'sell', buy_amount, current_price)
+        sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, current_price)
         return sell_return
     except ccxt.InsufficientFunds as e:
         exchange_issues += 1
-        add_note('%s - FAILED Selling (Insufficient Denied) %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+        add_note('%s - FAILED Selling (Insufficient Denied) %s %s at %s. Profit: %s' % (note_timestamp, formatted_amount, symbol, current_price, profit))
         return False
     except ccxt.PermissionDenied as e:
         exchange_issues += 1
-        add_note('%s - FAILED Selling (Permission Denied) %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+        add_note('%s - FAILED Selling (Permission Denied) %s %s at %s. Profit: %s' % (note_timestamp, formatted_amount, symbol, current_price, profit))
         return False
     except ccxt.RequestTimeout as e:
         exchange_issues += 1
         # recoverable error, do nothing and retry later
-        add_note('%s - FAILED Selling (RequestTimeout) %s %s at %s. Error: %s' % (note_timestamp, buy_amount, symbol, current_price, e))
+        add_note('%s - FAILED Selling (RequestTimeout) %s %s at %s. Error: %s' % (note_timestamp, formatted_amount, symbol, current_price, e))
         return False
     except ccxt.DDoSProtection as e:
         exchange_issues += 1
         # recoverable error, you might want to sleep a bit here and retry later
-        add_note('%s - FAILED Selling (DDoSProtection) %s %s at %s. Error: %s' % (note_timestamp, buy_amount, symbol, current_price, e))
+        add_note('%s - FAILED Selling (DDoSProtection) %s %s at %s. Error: %s' % (note_timestamp, formatted_amount, symbol, current_price, e))
         return False
     except ccxt.ExchangeNotAvailable as e:
         exchange_issues += 1
         # recoverable error, do nothing and retry later
-        add_note('%s - FAILED Selling (ExchangeNotAvailable) %s %s at %s. Error: %s' % (note_timestamp, buy_amount, symbol, current_price, e))
+        add_note('%s - FAILED Selling (ExchangeNotAvailable) %s %s at %s. Error: %s' % (note_timestamp, formatted_amount, symbol, current_price, e))
         return False
     except ccxt.NetworkError as e:
         exchange_issues += 1
         # do nothing and retry later...
-        add_note('%s - FAILED Selling (Network Error) %s %s at %s. Error: %s' % (note_timestamp, buy_amount, symbol, current_price, e))
+        add_note('%s - FAILED Selling (Network Error) %s %s at %s. Error: %s' % (note_timestamp, formatted_amount, symbol, current_price, e))
         return False
     except ccxt.ExchangeError as e:
         exchange_issues += 1
-        add_note('%s - FAILED Selling (Exchange Error) %s %s at %s. Error: %s' % (note_timestamp, buy_amount, symbol, current_price, e))
+        add_note('%s - FAILED Selling (Exchange Error) %s %s at %s. Error: %s' % (note_timestamp, formatted_amount, symbol, current_price, e))
         return False
 
 # Start telegram bot thread if it didn't fail above
@@ -512,7 +507,6 @@ worker.daemon = True
 worker.start()
 
 def main():
-    global since_start
     global notes
     last_run = None
     if os.path.isfile(bot_log): # update logs
@@ -576,11 +570,8 @@ def main():
                         profit = round(((current_price - buy_price) / buy_price) * 100, 2)
                         if profit < 0.5: # Don't sell if we're not making at least enough to cover fees
                             continue
-                        sell_attempt = attempt_sell(buy_time, note_timestamp, buy_amount, symbol, current_price, profit)
+                        sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
                         if sell_attempt != False:
-                            amount_spent = buy_price * buy_amount
-                            p_l_d = ((current_price - buy_price) / ((current_price + buy_price) / 2) * buy_amount) + amount_spent
-                            p_l_d = p_l_d - amount_spent
                             add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                             insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
                             update_order(order_id, 'closed')
@@ -598,17 +589,14 @@ def main():
                 buy_price = buy_order['price']
                 buy_amount = buy_order['amount']
                 profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                amount_spent = buy_price * buy_amount
-                p_l_d = ((current_price - buy_price) / ((current_price + buy_price) / 2) * buy_amount) + amount_spent
-                p_l_d = p_l_d - amount_spent
-                if int(profit) <= stoploss_percent:
-                    sell_attempt = attempt_sell(buy_time, note_timestamp, buy_amount, symbol, current_price, profit)
+                if int(profit) <= stoploss_percent: # Stoploss
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
                     if sell_attempt != False:
                         add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
                         update_order(order_id, 'closed')
-                if int(profit) >= take_profit:
-                    sell_attempt = attempt_sell(buy_time, note_timestamp, round(buy_amount,2), symbol, current_price, profit)
+                if int(profit) >= take_profit: # Take Profit
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
                     if sell_attempt != False:
                         add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
