@@ -103,6 +103,14 @@ TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit:  690.05%
 TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit:  702.70%
 TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit:  833.17%
 TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit: 1002.87%
+
+["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
+TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit  467.03%
+TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit  573.57%
+TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit  621.81%
+TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit  810.63%
+TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit  824.84%
+TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1149.07%
 ```
 
 ## Backtesting Results from 5-1-2016 until 11-21-2023
