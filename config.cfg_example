@@ -5,34 +5,34 @@ api_key = xxxxxxxxxxxxxxxx
 secret = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Generate an api key by following these instructions: https://core.telegram.org/bots/tutorial#obtain-your-bot-token
-telegram_key = 4839574812:AAFD39kkdpWt3ywyRZergyOLMaJhac60qc
+telegram_key = XXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Get your telegram id by chatting @userinfobot at https://t.me/userinfobot
 telegram_userid = xxxxxxxxxx
 
 [spend-config]
-# The amount in USD you're willing to use from your holdings
+# The amount in USD you're willing to use from your holdings. 
+# Be sure that buy_percent of spend_dollars is greater than 10$ or buys and sells will fail!!!
 spend_dollars = 1000
 
-# The percentage of the amount above that you want to spend per order
+# The percentage of the amount above that you want to spend per order. 
+# Be sure that buy_percent of spend_dollars is greater than 10$ or buys and sells will fail!!!
 buy_percent = 10 
 
-# Should we allow the purchase of duplicate symbols
+# Should we allow the purchase of duplicate symbols. It's best to set this to true for max profit.
 allow_duplicates = True
 
 [bot-config]
-# risky: MACD/MACDS + RSI -or- safe: SMA Only. Suggested: risky (THIS IS NO LONGER USED IN THE FINAL BOT)
-risk_level = risky
 
 # The interval on the candles that signals are looked for, and how often it attempts to look. 
 # Options: 1m, 1h, 1m, 1y. Suggested: 1h
 timeframe = 1h
 
-# The percent below 0 that you want to stoploss. Must be a positive number
-stoploss_percent = 10
+# The percent below 0 that you want to stoploss. Must be a positive number. Details on backtested profit below.
+stoploss_percent = 20
 
-# The percent above 0 that you want to stoploss. Must be a positive number
-take_profit = 5
+# The percent above 0 that you want to stoploss. Must be a positive number. Details on backtested profit below.
+take_profit = 10
 
 # The rsi value that the current rsi has to be above to buy. Default: 50
 rsi_buy_lt = 50
@@ -46,4 +46,24 @@ buy_when_higher = True
 # Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
 # There are issues with tokens well below 1 penny, so we suggest you stay away from SHIB for now.
 symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-#symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD"]
+
+# Extended Symbols Suggestion
+#symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
+
+# Backtesting info 1-1-2023 -> 11-21-2023:
+
+# ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
+# TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit:  372.20%
+# TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit:  639.13%
+# TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit:  690.05%
+# TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit:  702.70%
+# TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit:  833.17%
+# TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit: 1002.87%
+
+# ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
+# TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit  467.03%
+# TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit  573.57%
+# TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit  621.81%
+# TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit  810.63%
+# TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit  824.84%
+# TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1149.07%
