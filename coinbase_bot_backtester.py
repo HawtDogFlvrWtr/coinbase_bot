@@ -48,7 +48,6 @@ buy_percent = int(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
 
-
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 current_prices = {}
 
@@ -57,22 +56,6 @@ max_orders = int(spend_dollars / max_order_amount)
 
 db = TinyDB(storage=MemoryStorage)
 Orders = Query()
-
-# Initialize the exchange and API keys
-exchange = ccxt.coinbase ()
-exchange_id = 'coinbase'
-exchange_class = getattr(ccxt, exchange_id)
-exchange = exchange_class({
-    'apiKey': api_key,
-    'secret': secret,
-    'options':  {
-        'fetchTicker': 'fetchTickerV3',
-        'fetchTickers': 'fetchTickersV3',
-        'fetchMarkets': 'fetchMarketsV3',
-        'advanced': True
-    },
-    'enableRateLimit': True,
-})
 
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
     db.insert({'order_id': uuid.uuid4(), 'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': 0, 'sell_profit': 0, 'sell_time': 0})
@@ -200,7 +183,6 @@ def main():
                 # Sell Good Risk
                 buy_orders = search_order(symbol)
                 for buy_order in buy_orders:
-                    buy_time = buy_order['buy_time']
                     buy_price = buy_order['buy_price']
                     buy_amount = buy_order['buy_amount']
                     order_id = buy_order['order_id']
