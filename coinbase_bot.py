@@ -156,7 +156,7 @@ def telegram_bot():
             def handle_help(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
-                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <int> Sets the stoploss percent config'''
+                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config'''
                 bot.reply_to(message, help_text)
 
             @bot.message_handler(commands=['rsi_buy_lt'])
