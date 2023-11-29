@@ -149,11 +149,12 @@ def main():
     while True:
         time_readable = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
         for symbol in symbols:
-            df = overall_df[symbol]
             index = 0
+            df = overall_df[symbol]
             for row in df.itertuples(): # Uh this is faster :D
                 record_timestamp = row.timestamp / 1000
                 if record_timestamp != since_start:
+                    index += 1
                     continue
                 prev_index = index - 1
                 macd = row.MACD_12_26_9
