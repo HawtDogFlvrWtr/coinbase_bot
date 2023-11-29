@@ -428,95 +428,32 @@ def main():
                     macd_last = df['MACD_12_26_9'].iloc[len(df) - 2]
                     signal = df['MACDs_12_26_9'].iloc[-1]
                     signal_last = df['MACDs_12_26_9'].iloc[len(df) - 2]
-                    close = df['close'].iloc[-1]
                     rsi = df['RSI_14'].iloc[-1]
-                    fast_sma_current = df['fast_sma'].iloc[-1]
-                    slow_sma_current = df['slow_sma'].iloc[-1]
-                    fast_sma_previous = df['fast_sma'].iloc[len(df) - 2]
-                    slow_sma_previous = df['slow_sma'].iloc[len(df) - 2]
                     last_timetamp = df['timestamp'].iloc[-1] / 1000
                     note_timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
                     current_price = get_current_price(symbol)
                     # Check for a buy signal
-                    if risk_level == 'safe':
-                        # Buy Low Risk
-                        if fast_sma_previous < slow_sma_previous and fast_sma_current > slow_sma_current and macd > signal:
-                            if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
-                                continue
-                            if open_order_count() >= max_orders: # Already met our max open orders
-                                add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
-                                continue
-                            if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
-                                add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
-                                continue
-                            # Check for an order that fired at on the same epoch and symbol
-                            if not search_open_duplicate_timestamp(symbol, last_timetamp):
-                                # DO BUY
-                                buy_amount = max_order_amount / current_price
-                                buy_time = time.time()
-                                add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                                insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
-                            else:
-                                add_note('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
-                        # Sell Low Risk
-                        elif fast_sma_previous > slow_sma_previous and fast_sma_current < slow_sma_current and macd < signal:
-                            # DO SELL
-                            if not search_open_order(symbol):
-                                continue # No open orders for this coin
-                            # DO SELL
-                            buy_orders = search_order(symbol)
-                            for buy_order in buy_orders:
-                                if buy_order['status'] == 'closed':
-                                    continue
-                                buy_time = buy_order['buy_time']
-                                buy_price = buy_order['buy_price']
-                                buy_amount = buy_order['buy_amount']
-                                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                                if profit < 0: # Don't sell if we're way down
-                                    continue
-                                add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(buy_time, current_price, profit, time.time())
-                    else:
-                        # Buy Good Risk
-                        if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
-                            # Prevent duplicate coin
-                            if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                                add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
-                                continue
-                            if open_order_count() >= max_orders: # Already met our max open orders
-                                add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
-                                continue
-                            if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
-                                add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
-                                continue
-                            # Check for an order that fired at on the same epoch and symbol
-                            if not search_open_duplicate_timestamp(symbol, last_timetamp): 
-                                # DO BUY
-                                buy_amount = max_order_amount / current_price
-                                buy_time = time.time()
-                                add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                                insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
-                            else:
-                                add_note('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
-                        # Sell Good Risk
-                        elif macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
-                            # DO SELL
-                            if not search_open_order(symbol):
-                                continue
-                            buy_orders = search_order(symbol)
-                            for buy_order in buy_orders:
-                                if buy_order['status'] == 'closed':
-                                    continue
-                                buy_time = buy_order['buy_time']
-                                buy_price = buy_order['buy_price']
-                                buy_amount = buy_order['buy_amount']
-                                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                                if profit < 0: # Don't sell if we're way down
-                                    continue
-                                add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(buy_time, current_price, profit, time.time())
-
+                    # Buy Good Risk
+                    if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
+                        # Prevent duplicate coin
+                        if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
+                            add_note('%s - Skipping buy of symbol %s because we already have an open order' % (note_timestamp, symbol))
+                            continue
+                        if open_order_count() >= max_orders: # Already met our max open orders
+                            add_note('%s - Skipping buy of symbol %s because we are at our max orders.' % (note_timestamp, symbol))
+                            continue
+                        if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
+                            add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
+                            continue
+                        # Check for an order that fired at on the same epoch and symbol
+                        if not search_open_duplicate_timestamp(symbol, last_timetamp): 
+                            # DO BUY
+                            buy_amount = max_order_amount / current_price
+                            buy_time = time.time()
+                            add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                            insert_order('open', symbol, buy_amount, buy_time, last_timetamp, current_price)
+                        else:
+                            add_note('%s - Found a dupliate order for %s at %s.' % (note_timestamp, symbol, last_timetamp))
                 last_run = last_timetamp # last timestamp in the data we got
                 # Check for stoploss and take profit on the timeframe
                 buy_orders = search_order()

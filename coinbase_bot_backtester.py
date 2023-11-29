@@ -181,7 +181,6 @@ def main():
                     print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                     insert_order('open', symbol, buy_amount, record_timestamp, record_timestamp, current_price)
                     continue
-                # Sell Good Risk
                 buy_orders = search_order(symbol)
                 for buy_order in buy_orders:
                     buy_price = buy_order['buy_price']
@@ -189,15 +188,8 @@ def main():
                     order_id = buy_order['order_id']
                     profit = round(((current_price - buy_price) / buy_price) * 100, 2)
                     if buy_order['status'] == 'open':
-                        # Sell Signal
-                        if macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
-                            if profit >= 0.5:
-                                profit_list.append(profit)
-                                sold += 1
-                                print('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                                update_order(order_id, current_price, profit, last_timestamp)
                         # Stoploss
-                        elif profit <= stoploss_percent:
+                        if profit <= stoploss_percent:
                             profit_list.append(profit)
                             stoploss += 1
                             print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))

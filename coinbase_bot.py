@@ -641,27 +641,6 @@ def main():
                         if buy_attempt != False:
                             add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                             insert_order('buy_open', symbol, buy_amount, time.time(), last_timetamp, current_price, buy_attempt['id'], 'buy', buy_attempt['average'], 'limit', buy_attempt['filled'], buy_attempt['remaining'], buy_attempt['fee'])
-                # Sell
-                elif macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
-                    # DO SELL
-                    if not search_open_order(symbol, 'buy_open'):
-                        continue
-                    buy_orders = search_order(symbol)
-                    for buy_order in buy_orders:
-                        if buy_order['status'] == 'closed':
-                            continue
-                        buy_price = buy_order['price']
-                        buy_amount = buy_order['amount']
-                        order_id = buy_order['order_id']
-                        profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                        if profit < 0.5: # Don't sell if we're not making at least enough to cover fees
-                            continue
-                        sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
-                        if sell_attempt != False:
-                            add_note('%s - Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                            insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
-                            update_order(order_id, 'closed')
-
             last_run = last_timetamp # last timestamp in the data we got
             # Check for stoploss and take profit on the timeframe
             buy_orders = search_order()
