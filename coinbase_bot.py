@@ -86,6 +86,13 @@ exchange = exchange_class({
     'enableRateLimit': True,
 })
 
+def update_config(section, setting, value):
+    global config_file
+    config.read(config_file)
+    config.set(section, setting, str(value))
+    with open(config_file, 'w') as configfile:
+        config.write(configfile)
+
 # Daemons Start
 def ws_daemon():
     global current_prices
@@ -149,8 +156,64 @@ def telegram_bot():
             def handle_help(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
-                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.'''
+                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <int> Sets the stoploss percent config'''
                 bot.reply_to(message, help_text)
+
+            @bot.message_handler(commands=['rsi_buy_lt'])
+            def handle_rsi_buy_lt(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_rsi_buy_lt = int(message.text.split(" ")[1])
+                if not isinstance(tele_rsi_buy_lt, int):
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_rsi_buy_lt)
+                elif tele_rsi_buy_lt > 100 or tele_rsi_buy_lt < 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer greater than 0 and less than 100" % tele_rsi_buy_lt)
+                else:
+                    bot.reply_to(message, "Setting Buy RSI to %s" % tele_rsi_buy_lt)
+                    global rsi_buy_lt
+                    rsi_buy_lt = tele_rsi_buy_lt
+                    update_config('bot-config', 'rsi_buy_lt', tele_rsi_buy_lt)
+
+            @bot.message_handler(commands=['rsi_sell_gt'])
+            def handle_rsi_sell_gt(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_rsi_sell_gt = int(message.text.split(" ")[1])
+                if not isinstance(tele_rsi_sell_gt, int):
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_rsi_sell_gt)
+                elif tele_rsi_sell_gt > 100 or tele_rsi_sell_gt < 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer greater than 0 and less than 100" % tele_rsi_sell_gt)
+                else:
+                    bot.reply_to(message, "Setting Sell RSI to %s" % tele_rsi_sell_gt)
+                    global rsi_sell_gt
+                    rsi_sell_gt = tele_rsi_sell_gt
+                    update_config('bot-config', 'rsi_sell_gt', tele_rsi_sell_gt)
+
+            @bot.message_handler(commands=['take_profit'])
+            def handle_take_profit(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_take_profit = int(message.text.split(" ")[1])
+                if not isinstance(tele_take_profit, int):
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_take_profit)
+                elif tele_take_profit > 100 or tele_take_profit <= 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer greater than 0 and less than 100" % tele_take_profit)
+                else:
+                    bot.reply_to(message, "Setting Take Profit to %s" % tele_take_profit)
+                    global take_profit
+                    take_profit = tele_take_profit
+                    update_config('bot-config', 'take_profit', tele_take_profit)
+
+            @bot.message_handler(commands=['stoploss_percent'])
+            def handle_stoploss_percent(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_stoploss_percent = int(message.text.split(" ")[1])
+                if not isinstance(tele_stoploss_percent, int):
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_stoploss_percent)
+                elif tele_stoploss_percent >= 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer less than 0" % tele_stoploss_percent)
+                else:
+                    bot.reply_to(message, "Setting Stoploss to %s" % tele_stoploss_percent)
+                    global stoploss_percent
+                    stoploss_percent = tele_stoploss_percent * -1
+                    update_config('bot-config', 'stoploss_percent', stoploss_percent)
 
             @bot.message_handler(commands=['status'])
             def handle_status(message):
@@ -159,7 +222,7 @@ def telegram_bot():
                 status = status_pull['status']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = 'Bot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url)
+                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])
@@ -563,7 +626,6 @@ def main():
                     for buy_order in buy_orders:
                         if buy_order['status'] == 'closed':
                             continue
-                        buy_time = buy_order['timestamp']
                         buy_price = buy_order['price']
                         buy_amount = buy_order['amount']
                         order_id = buy_order['order_id']
