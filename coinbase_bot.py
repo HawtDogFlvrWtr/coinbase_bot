@@ -156,7 +156,7 @@ def telegram_bot():
             def handle_help(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
-                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config'''
+                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config\n/buy_percent <int> sets the buy percent in the config\n/spend_dollars <int> Sets the spend dollar ammount in the config'''
                 bot.reply_to(message, help_text)
 
             @bot.message_handler(commands=['rsi_buy_lt'])
@@ -215,6 +215,30 @@ def telegram_bot():
                     stoploss_percent = -abs(int(tele_stoploss_percent))
                     update_config('bot-config', 'stoploss_percent', stoploss_percent)
 
+            @bot.message_handler(commands=['spend_dollars'])
+            def handle_spend_dollars(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_spend_dollars = int(message.text.split(" ")[1])
+                if not isinstance(tele_spend_dollars, int) or tele_spend_dollars == 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_spend_dollars)
+                else:
+                    bot.reply_to(message, "Setting SpendDollars to %s" % tele_spend_dollars)
+                    global spend_dollars
+                    spend_dollars = int(tele_spend_dollars)
+                    update_config('spend-config', 'spend_dollars', spend_dollars)
+
+            @bot.message_handler(commands=['buy_percent'])
+            def handle_buy_percent(message):
+                bot.send_chat_action(message.chat.id, 'typing')
+                tele_buy_percent = int(message.text.split(" ")[1])
+                if not isinstance(tele_buy_percent, int) or tele_buy_percent == 0:
+                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_buy_percent)
+                else:
+                    bot.reply_to(message, "Setting SpendDollars to %s" % tele_buy_percent)
+                    global buy_percent
+                    buy_percent = int(tele_buy_percent)
+                    update_config('spend-config', 'buy_percent', stoploss_percent)
+
             @bot.message_handler(commands=['status'])
             def handle_status(message):
                 bot.send_chat_action(message.chat.id, 'typing')
@@ -222,7 +246,7 @@ def telegram_bot():
                 status = status_pull['status']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars:%s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])
