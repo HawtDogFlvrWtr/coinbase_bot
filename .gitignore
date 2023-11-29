@@ -1,3 +1,5 @@
 config.cfg
 *.json
 loop.sh
+bot_logs.txt
+cbb_database.json

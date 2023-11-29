@@ -19,6 +19,7 @@ from websocket import create_connection, WebSocketConnectionClosedException # we
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot_bt.json')
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
 parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1672531200)
 parser.add_argument('-rb', '--rsi_buy_lt', help="The start time for backtesting", type=int, default=50)
@@ -27,6 +28,7 @@ parser.add_argument('-t', '--take_profit', help="The start time for backtesting"
 parser.add_argument('-sl', '--stoploss_percent', help="The start time for backtesting", type=int, default=10)
 
 args = parser.parse_args()
+orders_json_filename = args.orders_file
 config_file = args.config_file
 since_start = args.start_time
 rsi_buy_lt = args.rsi_buy_lt
@@ -191,7 +193,6 @@ def main():
                         continue
                     # DO BUY
                     buy_amount = max_order_amount / current_price
-                    buy_time = last_timestamp
                     buy += 1
                     print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
                     insert_order('open', symbol, buy_amount, record_timestamp, record_timestamp, current_price)
@@ -207,7 +208,6 @@ def main():
                     if buy_order['status'] == 'open':
                         # Sell Signal
                         if macd < signal and macd_last > signal_last and rsi >= rsi_sell_gt:
-                            print("HERE")
                             if profit >= 0.5:
                                 profit_list.append(profit)
                                 sold += 1
@@ -232,7 +232,7 @@ def main():
         since_start = int(since_start + sleep_lookup[timeframe])
         if since_start > time.time():
             print("Backtesting finished")
-            print("Final Profit %s%%" % round(sum(profit_list), 2))
+            print("TakeProfit %s%%, Stoploss %s%%, RSI %s/%s, Profit %s%%" % (take_profit, stoploss_percent, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
             sys.exit(0)
 
 if __name__ == "__main__":
