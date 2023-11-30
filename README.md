@@ -115,8 +115,8 @@ TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates T
 TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 784.16%
 TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 819.62%
 TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1006.13%
-TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1052.17%
 TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1024.84%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1052.17%
 
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
 TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   -100%
