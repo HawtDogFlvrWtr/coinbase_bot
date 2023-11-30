@@ -207,7 +207,7 @@ def main():
         since_start = int(since_start + sleep_lookup[timeframe])
         if since_start > time.time():
             print("Backtesting finished")
-            print("TakeProfit %s%%, Stoploss %s%%, RSI %s/%s, Profit %s%%" % (take_profit, stoploss_percent, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
+            print("TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s,  RSI B-%s/S-%s, Profit %s%%" % (take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
             sys.exit(0)
 
 if __name__ == "__main__":

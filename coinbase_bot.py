@@ -246,7 +246,7 @@ def telegram_bot():
                 status = status_pull['status']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars:%s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])

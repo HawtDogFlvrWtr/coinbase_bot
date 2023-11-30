@@ -56,6 +56,9 @@ options:
                         The json filename for the orders file
 ```
 
+## Moving my bot to a new system
+
+To transfer your bot to a new system, git clone to the new server following the instructions above, turn it off on the original bot, copy the config.cfg and ccb_database.json (Or whatever you set it to) file to the new system, and restart the bot on the new machine.
 
 ## Running Backtests
 
@@ -97,20 +100,32 @@ options:
 ## Backtesting Results from 1-1-2023 until 11-29-2023
 ```
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-TakeProfit  5%, Stoploss -10%, RSI 50/50, Profit 358.34%
-TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit 556.41%
-TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit 562.87%
-TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit 387.66%
-TakeProfit  5%, Stoploss -20%, RSI 50/50, Profit 602.04%
-TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 685.01%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  358.34%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  387.66%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  556.41%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  562.87%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  602.04%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit  685.01%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit  764.15%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit  784.16%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit  821.64%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 1015.13%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 1022.59%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 1049.48%
 
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
-TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit 425.39%
-TakeProfit  5%, Stoploss -10%, RSI 50/50, Profit 395.01%
-TakeProfit  5%, Stoploss -20%, RSI 50/50, Profit 392.92%
-TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 515.86%
-TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit 583.23%
-TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit 626.98%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 392.92%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 395.01%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 425.39%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 515.86%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 583.23%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-50/S-50, Profit 626.98%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 647.48%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 723.62%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 747.00%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 760.69%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 826.16%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True,  RSI B-100/S-0, Profit 926.62%
 ```
 
 ## Backtesting Results from 5-1-2016 until 11-29-2023
