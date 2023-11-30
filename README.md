@@ -99,87 +99,87 @@ options:
 ## Backtesting Results from 12-31-2022 until 11-29-2023
 ```
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 13.43%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 22.12%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,    Profit 28.2%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 40.29%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 84.45%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 115.6%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,   Profit 377.4%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 384.33%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 583.81%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 594.23%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 600.46%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 717.56%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 764.15%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 784.16%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 819.62%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1006.13%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1052.17%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1024.84%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 13.43%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 22.12%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,    Profit 28.2%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 40.29%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 84.45%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70,   Profit 115.6%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,   Profit 377.4%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 384.33%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 583.81%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 594.23%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 600.46%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50,  Profit 717.56%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 764.15%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 784.16%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0,  Profit 819.62%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1006.13%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1052.17%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 1024.84%
 
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   -100%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -13.01%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   16.3%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   85.9%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -25.57%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -71.31%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 370.14%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 408.93%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 435.58%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 537.51%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 582.15%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 610.31%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 624.76%
-StartDate 12-31-2022 19:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 647.48%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 727.54%
-StartDate 12-31-2022 19:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 779.73%
-StartDate 12-31-2022 19:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 826.16%
-StartDate 12-31-2022 19:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 886.59%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   -100%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -13.01%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   16.3%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit   85.9%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -25.57%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit -71.31%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 370.14%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 408.93%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 435.58%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 537.51%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 582.15%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 610.31%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 624.76%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 647.48%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 727.54%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 779.73%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 826.16%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 886.59%
 ```
 
 ## Backtesting Results from 04-30-2016 until 11-29-2023
 ```
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit  -51.07%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit  -48.57%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    7.31%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2290.38%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 3125.52%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 3822.23%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 4035.99%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 4322.53%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 5615.27%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 6583.77%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit    -100%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit  -51.07%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit  -48.57%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    7.31%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2290.38%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 3125.52%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 3822.23%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 4035.99%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 4322.53%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 5615.27%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 6583.77%
 
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 1916.43%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 2616.51%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2631.80%
-StartDate 04-30-2016 20:00:00, TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2980.48%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 3923.17%
-StartDate 04-30-2016 20:00:00, TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 4159.89%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 4209.25%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 5583.36%
-StartDate 04-30-2016 20:00:00, TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 5928.61%
-StartDate 04-30-2016 20:00:00, TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 7329.58%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit    -100%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-30/S-70, Profit    -100%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 1916.43%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 2616.51%
+TakeProfit  5%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2631.80%
+TakeProfit  5%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 2980.48%
+TakeProfit 10%, Stoploss -10%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 3923.17%
+TakeProfit 10%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 4159.89%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 4209.25%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-50/S-50, Profit 5583.36%
+TakeProfit 20%, Stoploss -20%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 5928.61%
+TakeProfit 30%, Stoploss -30%, Buy Percent 10%, Spend Dollars 2000, Duplicates True, Buy Higher True, RSI B-100/S-0, Profit 7329.58%
 ```
 
 ## Support
