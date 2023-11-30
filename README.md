@@ -94,7 +94,7 @@ options:
                         The start time for backtesting
 ```
 
-## Backtesting Results from 1-1-2023 until 11-21-2023
+## Backtesting Results from 1-1-2023 until 11-29-2023
 ```
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
 TakeProfit  5%, Stoploss -10%, RSI 50/50, Profit 358.34%
@@ -113,15 +113,15 @@ TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit 583.23%
 TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit 626.98%
 ```
 
-## Backtesting Results from 5-1-2016 until 11-21-2023
+## Backtesting Results from 5-1-2016 until 11-29-2023
 ```
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit:  333.83%
-TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit: 1446.09%
-TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit: 2715.34%
-TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit: 3205.16%
-TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit: 4342.37%
-TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit: 5703.09%
+TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit  128.01%
+TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit  143.22%
+TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit 1466.16%
+TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1664.16%
+TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit 3098.93%
+TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit 4497.35%
 
 ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
 TakeProfit  5%, Stoploss -10%, RSI 50/50, Profit  501.35%
