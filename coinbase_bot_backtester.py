@@ -144,70 +144,79 @@ def main():
     stoploss = 0
     sold = 0
     buy = 0
+    profit = 0
     fetch_ohlcv_data()
     last_timestamp = time.time() # In case nothing comes through, we set this to now.
+    start_time = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
     while True:
         time_readable = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
         for symbol in symbols:
             index = 0
             df = overall_df[symbol]
-            for row in df.itertuples(): # Uh this is faster :D
-                record_timestamp = row.timestamp / 1000
-                if record_timestamp != since_start:
-                    index += 1
+            # Get last index for our coin
+            #if symbol not in symbol_indexes:
+            search = df[df['timestamp'] == since_start * 1000]
+            try:
+                index = search.index[0]
+                record_timestamp = df['timestamp'].iloc[index] / 1000
+                print("%s - No candle date for %s yet" % (record_timestamp, symbol))
+            except:
+                continue # This timestamp doesn't exist yet
+            record_timestamp = df['timestamp'].iloc[index] / 1000
+            prev_index = index - 1
+            macd = df['MACD_12_26_9'].iloc[index]
+            macd_last = df['MACD_12_26_9'].iloc[prev_index]
+            signal = df['MACDs_12_26_9'].iloc[index]
+            signal_last = df['MACDs_12_26_9'].iloc[prev_index]
+            current_price = df['close'].iloc[index]
+            rsi = df['RSI_14'].iloc[index]
+            note_timestamp = datetime.datetime.fromtimestamp(record_timestamp).strftime('%m-%d-%Y %H:%M:%S')
+            # Buy Good Risk
+            #print("Symbol: %s MACD: %s MACDs %s LMACD: %s LMACDs %s RSI: %s" % (symbol, macd, signal, macd_last, signal_last, rsi))
+            if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
+                # Prevent duplicate coin
+                if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
                     continue
-                prev_index = index - 1
-                macd = row.MACD_12_26_9
-                macd_last = df['MACD_12_26_9'].iloc[prev_index]
-                signal = row.MACDs_12_26_9
-                signal_last = df['MACDs_12_26_9'].iloc[prev_index]
-                current_price = row.close
-                rsi = row.RSI_14
-                note_timestamp = datetime.datetime.fromtimestamp(record_timestamp).strftime('%m-%d-%Y %H:%M:%S')
-                index += 1
-                # Buy Good Risk
-                #print("Symbol: %s MACD: %s MACDs %s LMACD: %s LMACDs %s RSI: %s" % (symbol, macd, signal, macd_last, signal_last, rsi))
-                if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
-                    # Prevent duplicate coin
-                    if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
-                        continue
-                    if open_order_count() >= max_orders: # Already met our max open orders
-                        continue
-                    if buy_when_higher == 'False' and last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
-                        continue
-                    # DO BUY
-                    buy_amount = max_order_amount / current_price
-                    buy += 1
-                    print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                    insert_order('open', symbol, buy_amount, record_timestamp, record_timestamp, current_price)
+                if open_order_count() >= max_orders: # Already met our max open orders
                     continue
-                buy_orders = search_order(symbol)
-                for buy_order in buy_orders:
-                    buy_price = buy_order['buy_price']
-                    buy_amount = buy_order['buy_amount']
-                    order_id = buy_order['order_id']
-                    profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                    if buy_order['status'] == 'open':
-                        # Stoploss
-                        if profit <= stoploss_percent:
-                            profit_list.append(profit)
-                            stoploss += 1
-                            print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                            update_order(order_id, current_price, profit, last_timestamp)
-                        # Take Profit
-                        elif profit >= take_profit:
-                            profit_list.append(profit)
-                            take_profit_count += 1
-                            print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                            update_order(order_id, current_price, profit, last_timestamp)
-
-                if last_profit != sum(profit_list):
-                    print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
-                    last_profit = sum(profit_list)
+                if buy_when_higher == 'False' and last_order_buy_price(symbol) > current_price: # Don't buy if we paid more for the last order
+                    continue
+                # DO BUY
+                buy_amount = max_order_amount / current_price
+                buy += 1
+                print('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                insert_order('open', symbol, buy_amount, record_timestamp, record_timestamp, current_price)
+                continue
+            buy_orders = search_order(symbol)
+            for buy_order in buy_orders:
+                buy_price = buy_order['buy_price']
+                buy_amount = buy_order['buy_amount']
+                order_id = buy_order['order_id']
+                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
+                if buy_order['status'] == 'open':
+                    # Stoploss
+                    if profit <= stoploss_percent:
+                        profit_list.append(profit)
+                        stoploss += 1
+                        print('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(order_id, current_price, profit, last_timestamp)
+                    # Take Profit
+                    elif profit >= take_profit:
+                        profit_list.append(profit)
+                        take_profit_count += 1
+                        print('%s - TAKEPROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                        update_order(order_id, current_price, profit, last_timestamp)
+            if last_profit != sum(profit_list):
+                print("Profit on %s: %s%%" % (time_readable, round(sum(profit_list), 2)))
+                last_profit = sum(profit_list)
+            if sum(profit_list) <= -100: # Bot Failed
+                print("Backtesting finished")
+                print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, -100))
+                sys.exit(0)
         since_start = int(since_start + sleep_lookup[timeframe])
         if since_start > time.time():
             print("Backtesting finished")
-            print("TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s,  RSI B-%s/S-%s, Profit %s%%" % (take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
+            print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
             sys.exit(0)
 
 if __name__ == "__main__":
