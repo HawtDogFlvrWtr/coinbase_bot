@@ -212,7 +212,7 @@ def telegram_bot():
                 else:
                     bot.reply_to(message, "Setting Stoploss to %s" % tele_stoploss_percent)
                     global stoploss_percent
-                    stoploss_percent = -abs(int(tele_stoploss_percent))
+                    stoploss_percent = int(tele_stoploss_percent) * -1
                     update_config('bot-config', 'stoploss_percent', stoploss_percent)
 
             @bot.message_handler(commands=['spend_dollars'])
