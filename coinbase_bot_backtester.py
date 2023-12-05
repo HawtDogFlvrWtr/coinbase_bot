@@ -159,8 +159,8 @@ def main():
             try:
                 index = search.index[0]
                 record_timestamp = df['timestamp'].iloc[index] / 1000
-                print("%s - No candle date for %s yet" % (record_timestamp, symbol))
             except:
+                print("%s - No candle date for %s yet" % (time_readable, symbol))
                 continue # This timestamp doesn't exist yet
             record_timestamp = df['timestamp'].iloc[index] / 1000
             prev_index = index - 1

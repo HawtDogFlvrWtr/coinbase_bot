@@ -595,6 +595,10 @@ worker.start()
 
 def main():
     global notes
+    global buy_percent
+    global spend_dollars
+    global rsi_buy_lt
+    global rsi_sell_gt
     last_run = None
     if os.path.isfile(bot_log): # update logs
         with open(bot_log, 'r') as o_log:

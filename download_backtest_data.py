@@ -49,21 +49,31 @@ for symbol in symbols:
         open_json = open(file_path)
         ohlcv_data = json.load(open_json)
         since_start = ohlcv_data[-1][0] / 1000
-        print(since_start)
     while True:
         print("Downloading %s %s" % (symbol, datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')))
         since = datetime.datetime.fromtimestamp(since_start).strftime('%Y-%m-%dT%H:%M:%SZ')
         latest_candle = exchange.fetch_ohlcv(symbol, timeframe, exchange.parse8601(since))
-        if len(latest_candle) == 0:
-            since_start = since_start + (60 * 60 * 300)
-            continue
         for candles in latest_candle:
             ohlcv_data.append(candles)
-        since_start = int(latest_candle[-1][0] / 1000)
-        if since_start == last_time:
-            break
-        else:
-            last_time = since_start
+        try:
+            since_start = int(latest_candle[-1][0] / 1000)
+            if since_start == last_time: # Was the last record in new data the same as the last?
+                if since_start >= time.time(): # Up to date
+                    break
+                else: # Coin must have gone away for awhile.
+                    since_start = since_start + (60 * 60 * 300)
+                    if since_start > time.time():
+                        break
+                    continue
+            else:
+                last_time = since_start
+        except IndexError as ie:
+            if since_start < time.time(): # Coin must have gone away for awhile.
+                since_start = since_start + (60 * 60 * 300) 
+            else: # Up to date
+                break 
+
+
     json_object = json.dumps(ohlcv_data, indent=4)
     with open(file_path, "w") as outfile:
         outfile.write(json_object)
