@@ -73,7 +73,6 @@ for symbol in symbols:
             else: # Up to date
                 break 
 
-
     json_object = json.dumps(ohlcv_data, indent=4)
     with open(file_path, "w") as outfile:
         outfile.write(json_object)
