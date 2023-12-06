@@ -265,6 +265,9 @@ def telegram_bot():
             bot.infinity_polling()
         except telebot.apihelper.ApiTelegramException as e:
             print("Telegram key is incorrect or config items missing.")
+        except TimeoutError as e:
+            time.sleep(5)
+            pass
 # Daemons End
 
 
