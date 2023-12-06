@@ -3,6 +3,7 @@ import configparser
 import datetime
 import hashlib
 import hmac
+import requests
 import json
 import os
 import sys
@@ -47,9 +48,10 @@ allow_duplicates = config.get('spend-config', 'allow_duplicates')
 rsi_buy_lt = int(json.loads(config.get('bot-config', 'rsi_buy_lt')))
 rsi_sell_gt = int(json.loads(config.get('bot-config', 'rsi_sell_gt')))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
+current_checksum = hashlib.md5(open('coinbase_bot.py', 'rb').read()).hexdigest()
+last_checksum = None
 
 # Locals/Globals Setup
-notes = []
 current_prices = {}
 ws_status = 'Down'
 exchange_issues = 0
@@ -85,6 +87,13 @@ exchange = exchange_class({
     },
     'enableRateLimit': True,
 })
+
+def get_online_checksum():
+    try:
+        online_checksum = requests.get('https://raw.githubusercontent.com/HawtDogFlvrWtr/coinbase_bot/main/coinbase_bot.py.checksum').text
+        return online_checksum
+    except:
+        return False
 
 def update_config(section, setting, value):
     global config_file
@@ -262,8 +271,6 @@ def telegram_bot():
 def add_note(note):
     global telegram_userid
     global bot
-    global notes
-    notes.append(note)
     with open(bot_log, 'a+') as b_log: # Log to our log file
         b_log.write("%s\n" % note)
     if bot:
@@ -594,20 +601,14 @@ worker.daemon = True
 worker.start()
 
 def main():
-    global notes
     global buy_percent
     global spend_dollars
     global rsi_buy_lt
     global rsi_sell_gt
+    global last_checksum
+    global current_checksum
     last_run = None
-    if os.path.isfile(bot_log): # update logs
-        with open(bot_log, 'r') as o_log:
-            for line in o_log:
-                notes.append(line.rstrip())
-
     while True:
-        if len(notes) > 15: # Only keep 15 messages
-            notes = notes[-15:]
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
             for symbol in symbols:
@@ -670,6 +671,10 @@ def main():
                         add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
                         insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
                         update_order(order_id, 'closed')
+            online_checksum = get_online_checksum() # Lets see if there is a new version
+            if online_checksum and online_checksum != current_checksum and online_checksum != last_checksum:
+                add_note("%s - There is a new version (%s) of this bot available." % (note_timestamp, online_checksum[0:5]))
+                last_checksum = online_checksum
         check_unfilled_orders() # Update open orders
         print(print_orders(last_run))
         if ws_status == 'Up':
