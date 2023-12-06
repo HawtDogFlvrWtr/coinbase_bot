@@ -18,7 +18,6 @@ num_threads = args.threads
 def do_stuff(q):
   while True:
     get_item = q.get()
-    print(get_item)
     if get_item:
         split_item = get_item.split(':')
         new_name = get_item.replace(':', '-')
