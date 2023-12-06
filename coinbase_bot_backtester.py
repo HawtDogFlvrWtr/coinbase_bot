@@ -154,15 +154,12 @@ def main():
             index = 0
             df = overall_df[symbol]
             # Get last index for our coin
-            #if symbol not in symbol_indexes:
             search = df[df['timestamp'] == since_start * 1000]
             try:
                 index = search.index[0]
                 record_timestamp = df['timestamp'].iloc[index] / 1000
             except:
-                print("%s - No candle date for %s yet" % (time_readable, symbol))
                 continue # This timestamp doesn't exist yet
-            record_timestamp = df['timestamp'].iloc[index] / 1000
             prev_index = index - 1
             macd = df['MACD_12_26_9'].iloc[index]
             macd_last = df['MACD_12_26_9'].iloc[prev_index]
@@ -172,7 +169,6 @@ def main():
             rsi = df['RSI_14'].iloc[index]
             note_timestamp = datetime.datetime.fromtimestamp(record_timestamp).strftime('%m-%d-%Y %H:%M:%S')
             # Buy Good Risk
-            #print("Symbol: %s MACD: %s MACDs %s LMACD: %s LMACDs %s RSI: %s" % (symbol, macd, signal, macd_last, signal_last, rsi))
             if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
                 # Prevent duplicate coin
                 if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
@@ -214,6 +210,7 @@ def main():
                 print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, -100))
                 sys.exit(0)
         since_start = int(since_start + sleep_lookup[timeframe])
+        time.sleep(0.001)
         if since_start > time.time():
             print("Backtesting finished")
             print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))

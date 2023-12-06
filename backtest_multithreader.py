@@ -32,10 +32,10 @@ def do_stuff(q):
         process.wait()
         q.task_done()
 
-for b in range(1,100): # Buy rsi starting at 27 because we got nothing before that
-  for s in range(1,100): # Sell rsi end at 81 because we got nothing before that
-    for tp in range(5,100,5): # Take Profit
-      for sl in range(5,100,5): # Stoploss
+for b in range(30,105,5): # Buy rsi starting at 30 because we got nothing before that
+  for s in range(0,85,5): # Sell rsi end at 81 because we got nothing after that
+    for tp in range(5,35,5): # Take Profit
+      for sl in range(5,35,5): # Stoploss
         for epoch in start_times:
           q.put("%s:%s:%s:%s:%s" % (b,s,tp,sl,epoch))
 
