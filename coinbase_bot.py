@@ -34,20 +34,29 @@ start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:
 # Config File Settings
 config = configparser.ConfigParser()
 config.read(config_file)
+
+# Api Config
 api_key = config.get('api-config', 'api_key')
 secret = config.get('api-config', 'secret')
 telegram_key = config.get('api-config', 'telegram_key')
 telegram_userid = config.get('api-config', 'telegram_userid')
-timeframe = config.get('bot-config', 'timeframe')
+
+# Spending Config
 spend_dollars = int(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
+allow_duplicates = config.get('spend-config', 'allow_duplicates')
+compound_spending = config.get('spend-config', 'compound_spending')
+
+# Bot Config
+timeframe = config.get('bot-config', 'timeframe')
 symbols = json.loads(config.get('bot-config', 'symbols'))
 stoploss_percent = -abs(int(json.loads(config.get('bot-config', 'stoploss_percent'))))
 take_profit = int(json.loads(config.get('bot-config', 'take_profit')))
-allow_duplicates = config.get('spend-config', 'allow_duplicates')
 rsi_buy_lt = int(json.loads(config.get('bot-config', 'rsi_buy_lt')))
 rsi_sell_gt = int(json.loads(config.get('bot-config', 'rsi_sell_gt')))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
+
+# File checksum
 current_checksum = hashlib.md5(open('coinbase_bot.py', 'rb').read()).hexdigest()
 last_checksum = None
 
@@ -94,6 +103,18 @@ def get_online_checksum():
         return online_checksum
     except:
         return False
+    
+def get_public_ip(): 
+    try: 
+        response = requests.get('https://httpbin.org/ip') 
+        if response.status_code == 200: 
+            ip_data = response.json() 
+            public_ip = ip_data.get('origin') 
+            return public_ip 
+        else: 
+            return False
+    except Exception as e: 
+        return False
 
 def update_config(section, setting, value):
     global config_file
@@ -101,6 +122,7 @@ def update_config(section, setting, value):
     config.set(section, setting, str(value))
     with open(config_file, 'w') as configfile:
         config.write(configfile)
+        
 
 # Daemons Start
 def ws_daemon():
@@ -250,12 +272,15 @@ def telegram_bot():
 
             @bot.message_handler(commands=['status'])
             def handle_status(message):
+                ip_address = get_public_ip()
+                if not ip_address:
+                    ip_address = 'unknown'
                 bot.send_chat_action(message.chat.id, 'typing')
                 status_pull = exchange.fetchStatus()
                 status = status_pull['status']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = '-General Info-\nBot start time: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nPublic IP: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])
@@ -486,11 +511,14 @@ def get_current_price(symbol):
 # Update orders that aren't closed or have currency left for purchase
 def check_unfilled_orders():
     global exchange_issues
+    global compound_spending
+    global spend_dollars
     orders = db.search((Orders.status == 'open') | (Orders.status == None))
     for order in orders:
         order_id = order['order_id']
         symbol = order['symbol']
         side = order['side']
+        price = order['price']
         try:
             open_order = exchange.fetchOrder(order_id, symbol)
             filled = open_order['filled']
@@ -500,6 +528,10 @@ def check_unfilled_orders():
             status = open_order['status']
             if side == 'buy': # Make sure we don't change buy side until we close the sell.
                 status = 'buy_open'
+            # Handle compounding
+            if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True':
+                spend_dollars = (price * filled) - fee
+                update_config('spend-config', 'spend_dollars', spend_dollars)
             db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
         except ccxt.RequestTimeout as e:
             exchange_issues += 1
@@ -519,6 +551,7 @@ def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
     formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
         buy_return = exchange.createOrder(symbol, 'limit', 'buy', formatted_amount, formatted_price, { 'clientOrderId': "%s-%s-buy" % (buy_time, symbol) })
+        insert_order('buy_open', symbol, buy_amount, time.time(), note_timestamp, current_price, buy_return['id'], 'buy', buy_return['average'], 'limit', buy_return['filled'], buy_return['remaining'], buy_return['fee'])
         return buy_return
     except ccxt.InsufficientFunds as e:
         exchange_issues += 1
@@ -554,12 +587,20 @@ def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
         return False
     
 # Attempt sell # TODO: Figure out why SHIB won't sell right.
-def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit):
+def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_id):
     global exchange_issues
+    global compound_spending
+    global spend_dollars
     formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
     current_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
         sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, current_price)
+        # Handle compounding
+        if sell_return['remaining'] == 0 and sell_return['filled'] > 0 and sell_return['fee'] > 0 and compound_spending == 'True':
+            spend_dollars = (current_price * sell_return['filled']) - sell_return['fee']
+            update_config('spend-config', 'spend_dollars', spend_dollars)
+        insert_order(sell_return['status'], symbol, buy_amount, time.time(), note_timestamp, current_price, sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
+        update_order(buy_id, 'closed') # Mark old buy as closed
         return sell_return
     except ccxt.InsufficientFunds as e:
         exchange_issues += 1
@@ -650,7 +691,6 @@ def main():
                         buy_attempt = attempt_buy(time.time(), note_timestamp, buy_amount, symbol, current_price)
                         if buy_attempt != False:
                             add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
-                            insert_order('buy_open', symbol, buy_amount, time.time(), last_timetamp, current_price, buy_attempt['id'], 'buy', buy_attempt['average'], 'limit', buy_attempt['filled'], buy_attempt['remaining'], buy_attempt['fee'])
             last_run = last_timetamp # last timestamp in the data we got
             # Check for stoploss and take profit on the timeframe
             buy_orders = search_order()
@@ -659,23 +699,18 @@ def main():
                     continue
                 symbol = buy_order['symbol']
                 current_price = get_current_price(symbol)
-                buy_time = buy_order['timestamp']
                 order_id = buy_order['order_id']
                 buy_price = buy_order['price']
                 buy_amount = buy_order['amount']
                 profit = round(((current_price - buy_price) / buy_price) * 100, 2)
                 if int(profit) <= stoploss_percent: # Stoploss
-                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
                     if sell_attempt != False:
                         add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
-                        update_order(order_id, 'closed')
                 if int(profit) >= take_profit: # Take Profit
-                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit)
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
                     if sell_attempt != False:
                         add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                        insert_order(sell_attempt['status'], symbol, buy_amount, time.time(), last_timetamp, current_price, sell_attempt['id'], 'sell', sell_attempt['average'], 'limit', sell_attempt['filled'], sell_attempt['remaining'], sell_attempt['fee'], order_id)
-                        update_order(order_id, 'closed')
             online_checksum = get_online_checksum() # Lets see if there is a new version
             if online_checksum and online_checksum != current_checksum and online_checksum != last_checksum:
                 add_note("%s - There is a new version (%s) of this bot available." % (note_timestamp, online_checksum[0:5]))

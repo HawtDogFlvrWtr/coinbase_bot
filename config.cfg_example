@@ -22,6 +22,9 @@ buy_percent = 10
 # Should we allow the purchase of duplicate symbols. It's best to set this to true for max profit.
 allow_duplicates = True
 
+# Setting this to true will increase/decrease your spend dollars based on wins and losses
+compound_spending = True
+
 [bot-config]
 
 # The interval on the candles that signals are looked for, and how often it attempts to look. 
