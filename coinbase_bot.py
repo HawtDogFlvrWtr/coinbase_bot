@@ -480,6 +480,8 @@ def get_current_price(symbol):
                 exchange_issues += 1
             except ccxt.ExchangeError as e:
                 exchange_issues += 1
+            except TypeError as e:
+                exchange_issues += 1
 
 # Update orders that aren't closed or have currency left for purchase
 def check_unfilled_orders():
