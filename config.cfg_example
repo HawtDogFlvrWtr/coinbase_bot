@@ -12,11 +12,12 @@ telegram_userid = xxxxxxxxxx
 
 [spend-config]
 # The amount in USD you're willing to use from your holdings. 
-# Be sure that buy_percent of spend_dollars is greater than 10$ or buys and sells will fail!!!
+# Be sure that buy_percent of spend_dollars (spend_dollars / buy_percent) is greater than 10$ or buys and sells will fail!!!
+# Must be a postive integer or float
 spend_dollars = 1000
 
 # The percentage of the amount above that you want to spend per order. 
-# Be sure that buy_percent of spend_dollars is greater than 10$ or buys and sells will fail!!!
+# Be sure that buy_percent of spend_dollars (spend_dollars / buy_percent) is greater than 10$ or buys and sells will fail!!!
 buy_percent = 10 
 
 # Should we allow the purchase of duplicate symbols. It's best to set this to true for max profit.
@@ -32,17 +33,14 @@ compound_spending = False
 # Options: 1m, 1h, 1m, 1y. Suggested: 1h
 timeframe = 1h
 
-# The percent below 0 that you want to stoploss. Must be a positive number. Details on backtested profit below.
-stoploss_percent = 20
+# The percent below 0 that you want to stoploss. Must be a negative integer or float. Details on backtested profit below.
+stoploss_percent = -20
 
-# The percent above 0 that you want to stoploss. Must be a positive number. Details on backtested profit below.
+# The percent above 0 that you want to stoploss. Must be a positive integer or float. Details on backtested profit below.
 take_profit = 10
 
-# The rsi value that the current rsi has to be above to buy. Default: 50
+# The rsi value that the current rsi has to be above to buy. Must be a positive integer. Default: 50
 rsi_buy_lt = 50
-
-# The rsi value that the current rsi has to be above to sell. Default: 50
-rsi_sell_gt = 50
 
 # This will prevent buying additional of the same symbol if the price is higher than the previous buy if set to False. Default: True
 buy_when_higher = True
@@ -53,21 +51,3 @@ symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/US
 
 # Extended Symbols Suggestion
 #symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
-
-# Backtesting info 1-1-2023 -> 11-21-2023:
-
-# ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]
-# TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit:  372.20%
-# TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit:  639.13%
-# TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit:  690.05%
-# TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit:  702.70%
-# TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit:  833.17%
-# TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit: 1002.87%
-
-# ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD","LTC/USD","AAVE/USD","RNDR/USD","MATIC/USD"]
-# TakeProfit 30%, Stoploss -30%, RSI 50/50, Profit  467.03%
-# TakeProfit 5%,  Stoploss -10%, RSI 50/50, Profit  573.57%
-# TakeProfit 20%, Stoploss -20%, RSI 50/50, Profit  621.81%
-# TakeProfit 5%,  Stoploss -20%, RSI 50/50, Profit  810.63%
-# TakeProfit 10%, Stoploss -10%, RSI 50/50, Profit  824.84%
-# TakeProfit 10%, Stoploss -20%, RSI 50/50, Profit 1149.07%

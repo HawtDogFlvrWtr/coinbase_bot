@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import ccxt
+import math
 import pandas as pd
 import pandas_ta as ta
 import time
@@ -19,17 +20,23 @@ from websocket import create_connection, WebSocketConnectionClosedException # we
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='cbb_database.json')
-parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
+parser.add_argument('-c', '--config_file', help="The name of your config file", default='config.cfg')
+parser.add_argument('-d', '--daemon', help="Running this bot in daemon mode shows no display on the console for privacy.", action='store_true')
 
-print('\033[0;31;40mI have made every attempt to ensure the accuracy and reliability of this application.\nHowever, this application is provided "as is" without warranty or support of any kind.\nI do not accept any responsibility or liability for the accuracy, content, completeness,\nlegality, or reliability of this application. Donations are welcome but doing so does not\nprovide you support for this project.\n\nBTC Wallet: 3CyQ5LW9Ycuuu8Ddr5de5goWRh95C4rN8E\nETH Wallet: 0x7eBEe95Af86Ed7f4B0eD29A322F1b811AD61DF36\nSHIB Wallet: 0x8cCc65a7786Bd5bf74E884712FF55C63b36B0112\n\nUse this application at your own risk.\033[0m')
-time.sleep(5)
+
 
 # Argument setup
 args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
+daemon = args.daemon
 sleep_lookup = {'1m': 61, '1h': 3660, '1d': 84060} # Added second to give the exchange time to update the candles
 start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
+
+# Notice
+if not daemon:
+    print('\033[0;31;40mI have made every attempt to ensure the accuracy and reliability of this application.\nHowever, this application is provided "as is" without warranty or support of any kind.\nI do not accept any responsibility or liability for the accuracy, content, completeness,\nlegality, or reliability of this application. Donations are welcome but doing so does not\nprovide you support for this project.\n\nBTC Wallet: 3CyQ5LW9Ycuuu8Ddr5de5goWRh95C4rN8E\nETH Wallet: 0x7eBEe95Af86Ed7f4B0eD29A322F1b811AD61DF36\nSHIB Wallet: 0x8cCc65a7786Bd5bf74E884712FF55C63b36B0112\n\nUse this application at your own risk.\033[0m')
+    time.sleep(5)
 
 # Config File Settings
 config = configparser.ConfigParser()
@@ -50,11 +57,14 @@ compound_spending = config.get('spend-config', 'compound_spending')
 # Bot Config
 timeframe = config.get('bot-config', 'timeframe')
 symbols = json.loads(config.get('bot-config', 'symbols'))
-stoploss_percent = -abs(int(json.loads(config.get('bot-config', 'stoploss_percent'))))
-take_profit = int(json.loads(config.get('bot-config', 'take_profit')))
+stoploss_percent = float(json.loads(config.get('bot-config', 'stoploss_percent')))
+if stoploss_percent > 0:
+    print("Your stoploss_percent setting in your config is a positive number. Please set it to a negative number. Ex: -20")
+    sys.exit()
+take_profit = float(json.loads(config.get('bot-config', 'take_profit')))
 rsi_buy_lt = int(json.loads(config.get('bot-config', 'rsi_buy_lt')))
-rsi_sell_gt = int(json.loads(config.get('bot-config', 'rsi_sell_gt')))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
+
 
 # File checksum
 current_checksum = hashlib.md5(open('coinbase_bot.py', 'rb').read()).hexdigest()
@@ -187,7 +197,7 @@ def telegram_bot():
             def handle_help(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
-                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/rsi_sell_gt <int> Sets the rsi sell >\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config\n/buy_percent <int> sets the buy percent in the config\n/spend_dollars <int> Sets the spend dollar ammount in the config'''
+                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config\n/buy_percent <int> sets the buy percent in the config\n/spend_dollars <int> Sets the spend dollar ammount in the config'''
                 bot.reply_to(message, help_text)
 
             @bot.message_handler(commands=['rsi_buy_lt'])
@@ -204,25 +214,11 @@ def telegram_bot():
                     rsi_buy_lt = tele_rsi_buy_lt
                     update_config('bot-config', 'rsi_buy_lt', tele_rsi_buy_lt)
 
-            @bot.message_handler(commands=['rsi_sell_gt'])
-            def handle_rsi_sell_gt(message):
-                bot.send_chat_action(message.chat.id, 'typing')
-                tele_rsi_sell_gt = int(message.text.split(" ")[1])
-                if not isinstance(tele_rsi_sell_gt, int):
-                    bot.reply_to(message, "%s doesn't appear to be an integer" % tele_rsi_sell_gt)
-                elif tele_rsi_sell_gt > 100 or tele_rsi_sell_gt < 0:
-                    bot.reply_to(message, "%s doesn't appear to be an integer greater than 0 and less than 100" % tele_rsi_sell_gt)
-                else:
-                    bot.reply_to(message, "Setting Sell RSI to %s" % tele_rsi_sell_gt)
-                    global rsi_sell_gt
-                    rsi_sell_gt = tele_rsi_sell_gt
-                    update_config('bot-config', 'rsi_sell_gt', tele_rsi_sell_gt)
-
             @bot.message_handler(commands=['take_profit'])
             def handle_take_profit(message):
                 bot.send_chat_action(message.chat.id, 'typing')
-                tele_take_profit = int(message.text.split(" ")[1])
-                if not isinstance(tele_take_profit, int):
+                tele_take_profit = float(message.text.split(" ")[1])
+                if not isinstance(tele_take_profit, float):
                     bot.reply_to(message, "%s doesn't appear to be an integer" % tele_take_profit)
                 elif tele_take_profit > 100 or tele_take_profit <= 0:
                     bot.reply_to(message, "%s doesn't appear to be an integer greater than 0 and less than 100" % tele_take_profit)
@@ -235,39 +231,39 @@ def telegram_bot():
             @bot.message_handler(commands=['stoploss_percent'])
             def handle_stoploss_percent(message):
                 bot.send_chat_action(message.chat.id, 'typing')
-                tele_stoploss_percent = int(message.text.split(" ")[1])
-                if not isinstance(tele_stoploss_percent, int):
+                tele_stoploss_percent = float(message.text.split(" ")[1])
+                if not isinstance(tele_stoploss_percent, float):
                     bot.reply_to(message, "%s doesn't appear to be an integer" % tele_stoploss_percent)
                 elif tele_stoploss_percent >= 0:
                     bot.reply_to(message, "%s doesn't appear to be an integer less than 0" % tele_stoploss_percent)
                 else:
                     bot.reply_to(message, "Setting Stoploss to %s" % tele_stoploss_percent)
                     global stoploss_percent
-                    stoploss_percent = int(tele_stoploss_percent) * -1
+                    stoploss_percent = float(tele_stoploss_percent)
                     update_config('bot-config', 'stoploss_percent', stoploss_percent)
 
             @bot.message_handler(commands=['spend_dollars'])
             def handle_spend_dollars(message):
                 bot.send_chat_action(message.chat.id, 'typing')
-                tele_spend_dollars = int(message.text.split(" ")[1])
-                if not isinstance(tele_spend_dollars, int) or tele_spend_dollars == 0:
+                tele_spend_dollars = float(message.text.split(" ")[1])
+                if not isinstance(tele_spend_dollars, float) or tele_spend_dollars == 0:
                     bot.reply_to(message, "%s doesn't appear to be an integer" % tele_spend_dollars)
                 else:
                     bot.reply_to(message, "Setting SpendDollars to %s" % tele_spend_dollars)
                     global spend_dollars
-                    spend_dollars = int(tele_spend_dollars)
+                    spend_dollars = float(tele_spend_dollars)
                     update_config('spend-config', 'spend_dollars', spend_dollars)
 
             @bot.message_handler(commands=['buy_percent'])
             def handle_buy_percent(message):
                 bot.send_chat_action(message.chat.id, 'typing')
-                tele_buy_percent = int(message.text.split(" ")[1])
-                if not isinstance(tele_buy_percent, int) or tele_buy_percent == 0:
+                tele_buy_percent = float(message.text.split(" ")[1])
+                if not isinstance(tele_buy_percent, float) or tele_buy_percent == 0:
                     bot.reply_to(message, "%s doesn't appear to be an integer" % tele_buy_percent)
                 else:
                     bot.reply_to(message, "Setting SpendDollars to %s" % tele_buy_percent)
                     global buy_percent
-                    buy_percent = int(tele_buy_percent)
+                    buy_percent = float(tele_buy_percent)
                     update_config('spend-config', 'buy_percent', stoploss_percent)
 
             @bot.message_handler(commands=['status'])
@@ -280,7 +276,7 @@ def telegram_bot():
                 status = status_pull['status']
                 eta = status_pull['eta']
                 url = status_pull['url']
-                string = '-General Info-\nBot start time: %s\nPublic IP: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nSell RSI GT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, rsi_sell_gt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nPublic IP: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['orders'])
@@ -422,7 +418,7 @@ def fetch_ohlcv_data(symbol):
             pass
        
 # Generate macd information for the signals
-def macd_signals(df, symbol):
+def macd_signals(df):
     fast = 12
     slow = 26
     signal = 9
@@ -513,25 +509,29 @@ def check_unfilled_orders():
     global exchange_issues
     global compound_spending
     global spend_dollars
-    orders = db.search((Orders.status == 'open') | (Orders.status == None))
+    orders = db.search((Orders.status == 'open') | (Orders.status == None) | (Orders.filled == None))
     for order in orders:
         order_id = order['order_id']
         symbol = order['symbol']
         side = order['side']
-        price = order['price']
+        price = float(order['price'])
         try:
             open_order = exchange.fetchOrder(order_id, symbol)
-            filled = open_order['filled']
-            remaining = open_order['remaining']
-            fee = open_order['fee']['cost']
-            average = open_order['average']
+            filled = float(open_order['filled'])
+            remaining = float(open_order['remaining'])
+            fee = float(open_order['fee']['cost'])
+            average = float(open_order['average'])
             status = open_order['status']
-            if side == 'buy': # Make sure we don't change buy side until we close the sell.
+            if side == 'buy' and status != 'closed': # Make sure we don't change buy side until we close the sell.
                 status = 'buy_open'
-            # Handle compounding
+            # Handle compounding on sell
             if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
-                spend_dollars = (price * filled) - fee
-                update_config('spend-config', 'spend_dollars', spend_dollars)
+                buy_orders = db.search(Orders.order_id == order['matching_order_id'])
+                for buy_order in buy_orders:
+                    buy_total = math.floor((float(buy_order['price']) * float(buy_order['filled'])) - float(buy_order['cost']))
+                    sell_total = math.floor((float(price) * float(filled)) - float(fee))
+                    spend_dollars = spend_dollars + (sell_total - buy_total)
+                    update_config('spend-config', 'spend_dollars', spend_dollars)
             db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
         except ccxt.RequestTimeout as e:
             exchange_issues += 1
@@ -597,8 +597,12 @@ def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_
         sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, current_price)
         # Handle compounding
         if sell_return['remaining'] == 0 and sell_return['filled'] > 0 and sell_return['fee'] > 0 and compound_spending == 'True':
-            spend_dollars = (current_price * sell_return['filled']) - sell_return['fee']
-            update_config('spend-config', 'spend_dollars', spend_dollars)
+            buy_orders = db.search(Orders.order_id == buy_id)
+            for buy_order in buy_orders:
+                buy_total = math.floor((float(buy_order['price']) * float(buy_order['filled'])) - float(buy_order['cost']))
+                sell_total = math.floor((float(current_price) * float(sell_return['filled'])) - float(sell_return['fee']))
+                spend_dollars = spend_dollars + (sell_total - buy_total)
+                update_config('spend-config', 'spend_dollars', spend_dollars)
         insert_order(sell_return['status'], symbol, buy_amount, time.time(), note_timestamp, current_price, sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
         update_order(buy_id, 'closed') # Mark old buy as closed
         return sell_return
@@ -650,7 +654,6 @@ def main():
     global buy_percent
     global spend_dollars
     global rsi_buy_lt
-    global rsi_sell_gt
     global last_checksum
     global current_checksum
     last_run = None
@@ -664,7 +667,7 @@ def main():
                 if len(df) < 1:
                     add_note("%s doesn't appear to be a valid symbol on Coinbase A.T. Please remove it from your list of symbols above, and restart the bot." % symbol)
                     continue # This symbol doesn't exist on coinbase.
-                df = macd_signals(df,symbol)
+                df = macd_signals(df)
                 macd = df['MACD_12_26_9'].iloc[-1]
                 macd_last = df['MACD_12_26_9'].iloc[len(df) - 2]
                 signal = df['MACDs_12_26_9'].iloc[-1]
@@ -716,7 +719,8 @@ def main():
                 add_note("%s - There is a new version (%s) of this bot available." % (note_timestamp, online_checksum[0:5]))
                 last_checksum = online_checksum
         check_unfilled_orders() # Update open orders
-        print(print_orders(last_run))
+        if not daemon:
+            print(print_orders(last_run))
         if ws_status == 'Up':
             time.sleep(0.25)
         else:
