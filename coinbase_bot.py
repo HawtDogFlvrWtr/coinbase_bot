@@ -85,7 +85,7 @@ except:
 
 # Order Setup
 max_order_amount = buy_percent / 100 * spend_dollars
-max_orders = int(spend_dollars / max_order_amount)
+max_orders = math.ceil(spend_dollars / max_order_amount)
 
 # Database Setup
 db = TinyDB(orders_json_filename, indent=4)
