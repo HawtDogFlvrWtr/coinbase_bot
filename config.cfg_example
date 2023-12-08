@@ -23,7 +23,8 @@ buy_percent = 10
 allow_duplicates = True
 
 # Setting this to true will increase/decrease your spend dollars based on wins and losses
-compound_spending = True
+# This is still not working. Leave False for now.
+compound_spending = False
 
 [bot-config]
 
