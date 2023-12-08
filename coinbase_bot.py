@@ -529,7 +529,7 @@ def check_unfilled_orders():
             if side == 'buy': # Make sure we don't change buy side until we close the sell.
                 status = 'buy_open'
             # Handle compounding
-            if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True':
+            if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
                 spend_dollars = (price * filled) - fee
                 update_config('spend-config', 'spend_dollars', spend_dollars)
             db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
