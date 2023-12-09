@@ -193,14 +193,28 @@ def telegram_bot():
     global ws_restarts
     while True:
         try:
-            @bot.message_handler(commands=['help'])
+            @bot.message_handler(commands=['h'])
             def handle_help(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 # Provide a list of available commands and their descriptions
-                help_text = '''/help     Show available commands.\n/orders Display your open orders.\n/status  Displays bot info.\n/rsi_buy_lt <int> Sets the rsi buy <\n/take_profit <int> Sets the take profit config\n/stoploss_percent <negative int> Sets the stoploss percent config\n/buy_percent <int> sets the buy percent in the config\n/spend_dollars <int> Sets the spend dollar ammount in the config'''
-                bot.reply_to(message, help_text)
+                menu = PrettyTable(['Command', 'Description'])
+                menu.align['Command'] = 'l'
+                menu.align['Description'] = 'l'
+                command_list = {
+                    '/h': 'Show available commands',
+                    '/o': 'Display your open orders.',
+                    '/s': 'Shows bot status',
+                    '/r #': 'Sets the buy rsi',
+                    '/t #': 'Sets take profit',
+                    '/b #': 'Sets buy percent',
+                    '/sl #': 'Sets stoploss',
+                    '/sd #': 'Sets the spend dollars'
+                }
+                for k in command_list:
+                    menu.add_row([k, command_list[k]])
+                bot.reply_to(message, '<pre>%s</pre>' % menu, parse_mode='html')
 
-            @bot.message_handler(commands=['rsi_buy_lt'])
+            @bot.message_handler(commands=['rsi'])
             def handle_rsi_buy_lt(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_rsi_buy_lt = int(message.text.split(" ")[1])
@@ -214,7 +228,7 @@ def telegram_bot():
                     rsi_buy_lt = tele_rsi_buy_lt
                     update_config('bot-config', 'rsi_buy_lt', tele_rsi_buy_lt)
 
-            @bot.message_handler(commands=['take_profit'])
+            @bot.message_handler(commands=['tp'])
             def handle_take_profit(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_take_profit = float(message.text.split(" ")[1])
@@ -228,7 +242,7 @@ def telegram_bot():
                     take_profit = tele_take_profit
                     update_config('bot-config', 'take_profit', tele_take_profit)
 
-            @bot.message_handler(commands=['stoploss_percent'])
+            @bot.message_handler(commands=['sl'])
             def handle_stoploss_percent(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_stoploss_percent = float(message.text.split(" ")[1])
@@ -242,7 +256,7 @@ def telegram_bot():
                     stoploss_percent = float(tele_stoploss_percent)
                     update_config('bot-config', 'stoploss_percent', stoploss_percent)
 
-            @bot.message_handler(commands=['spend_dollars'])
+            @bot.message_handler(commands=['sd'])
             def handle_spend_dollars(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_spend_dollars = float(message.text.split(" ")[1])
@@ -254,7 +268,7 @@ def telegram_bot():
                     spend_dollars = float(tele_spend_dollars)
                     update_config('spend-config', 'spend_dollars', spend_dollars)
 
-            @bot.message_handler(commands=['buy_percent'])
+            @bot.message_handler(commands=['bp'])
             def handle_buy_percent(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_buy_percent = float(message.text.split(" ")[1])
@@ -266,7 +280,7 @@ def telegram_bot():
                     buy_percent = float(tele_buy_percent)
                     update_config('spend-config', 'buy_percent', stoploss_percent)
 
-            @bot.message_handler(commands=['status'])
+            @bot.message_handler(commands=['s'])
             def handle_status(message):
                 ip_address = get_public_ip()
                 if not ip_address:
@@ -280,7 +294,7 @@ def telegram_bot():
                 string = '-General Info-\nBot start time: %s\nMy Version: %s\nLatest Version: %s\nPublic IP: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, current_checksum[0:5], online_checksum[0:5], ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
-            @bot.message_handler(commands=['orders'])
+            @bot.message_handler(commands=['o'])
             def handle_orders(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 bot.reply_to(message, '<pre>%s</pre>' % print_orders(), parse_mode='html')
