@@ -523,17 +523,18 @@ def check_unfilled_orders():
             fee = float(open_order['fee']['cost'])
             average = float(open_order['average'])
             status = open_order['status']
-            if side == 'buy' and status != 'closed': # Make sure we don't change buy side until we close the sell.
-                status = 'buy_open'
-            # Handle compounding on sell
-            if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
-                buy_orders = db.search(Orders.order_id == order['matching_order_id'])
-                for buy_order in buy_orders:
-                    buy_total = math.floor((float(buy_order['price']) * float(buy_order['filled'])) - float(buy_order['cost']))
-                    sell_total = math.floor((float(price) * float(filled)) - float(fee))
-                    spend_dollars = spend_dollars + (sell_total - buy_total)
-                    update_config('spend-config', 'spend_dollars', spend_dollars)
-            db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
+            if side == 'buy': # Make sure we don't change buy side until we close the sell.
+                db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
+            else:
+                # Handle compounding on sell
+                if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
+                    buy_orders = db.search(Orders.order_id == order['matching_order_id'])
+                    for buy_order in buy_orders:
+                        buy_total = math.floor((float(buy_order['price']) * float(buy_order['filled'])) - float(buy_order['cost']))
+                        sell_total = math.floor((float(price) * float(filled)) - float(fee))
+                        spend_dollars = spend_dollars + (sell_total - buy_total)
+                        update_config('spend-config', 'spend_dollars', spend_dollars)
+                db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
         except ccxt.RequestTimeout as e:
             exchange_issues += 1
         except ccxt.DDoSProtection as e:
