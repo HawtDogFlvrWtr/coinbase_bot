@@ -135,57 +135,6 @@ def update_config(section, setting, value):
         
 
 # Daemons Start
-def ws_daemon():
-    global current_prices
-    global api_key
-    global secret
-    global ws
-    global symbols
-    global ws_status
-    global ws_restarts
-    channel = "ticker"
-    timestamp = str(int(time.time()))
-    product_ids = []
-    for symbol in symbols:
-        product_ids.append(symbol.replace("/", '-'))
-    product_ids_str = ",".join(product_ids)
-    while True:
-        ws_status = 'Up'
-        try:
-            message = f"{timestamp}{channel}{product_ids_str}"
-            signature = hmac.new(secret.encode("utf-8"), message.encode("utf-8"), digestmod=hashlib.sha256).hexdigest()
-            ws = create_connection("wss://advanced-trade-ws.coinbase.com")
-            ws.send(
-                json.dumps(
-                    {
-                        "type": "subscribe",
-                        "product_ids": product_ids,
-                        "channel": channel,
-                        "api_key": api_key,
-                        "timestamp": timestamp,
-                        "signature": signature,
-                    }
-                )
-            )
-            while ws.connected:
-                data = ws.recv()
-                if data != "":
-                    msg = json.loads(data)
-                    if 'events' not in msg: # Because why not, Coinbase
-                        continue
-                    for event in msg['events']:
-                        if 'tickers' not in event:
-                            continue
-                        for ticker in event['tickers']:
-                            timestamp = time.time()
-                            current_prices[ticker['product_id']] = {'price': float(ticker['price']), 'timestamp': timestamp}
-                            for coin in current_prices: # Got an update from another coin so WS is still up. lets push the timestamp to everyone.
-                                current_prices[coin]['timestamp'] = timestamp
-        except WebSocketConnectionClosedException as e:
-            ws_restarts += 1
-            ws_status = 'Down'
-            pass
-
 def telegram_bot():
     global bot
     global exchange_issues
@@ -493,31 +442,26 @@ def print_orders(last_run = None):
 def get_current_price(symbol):
     global current_prices
     global exchange_issues
-    clean_symbol = symbol.replace('/', '-')
     while True: # Retry if we get no return.. Assume except
-        if clean_symbol in current_prices and current_prices[clean_symbol]['timestamp'] >= time.time() - 10: # Check for fresh websocket data before using it 
-            current_price = current_prices[clean_symbol]['price']
+        try:
+            tickers = exchange.fetch_tickers()
+            for ticker in tickers:
+                timestamp = time.time()
+                current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
+            current_price = current_prices[symbol]['price']
             return current_price
-        else:
-            try:
-                tickers = exchange.fetch_tickers()
-                for ticker in tickers:
-                    timestamp = time.time()
-                    current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
-                current_price = current_prices[symbol]['price']
-                return current_price
-            except ccxt.RequestTimeout as e:
-                exchange_issues += 1
-            except ccxt.DDoSProtection as e:
-                exchange_issues += 1
-            except ccxt.ExchangeNotAvailable as e:
-                exchange_issues += 1
-            except ccxt.NetworkError as e:
-                exchange_issues += 1
-            except ccxt.ExchangeError as e:
-                exchange_issues += 1
-            except TypeError as e:
-                exchange_issues += 1
+        except ccxt.RequestTimeout as e:
+            exchange_issues += 1
+        except ccxt.DDoSProtection as e:
+            exchange_issues += 1
+        except ccxt.ExchangeNotAvailable as e:
+            exchange_issues += 1
+        except ccxt.NetworkError as e:
+            exchange_issues += 1
+        except ccxt.ExchangeError as e:
+            exchange_issues += 1
+        except TypeError as e:
+            exchange_issues += 1
 
 # Update orders that aren't closed or have currency left for purchase
 def check_unfilled_orders():
@@ -529,16 +473,17 @@ def check_unfilled_orders():
         order_id = order['order_id']
         symbol = order['symbol']
         side = order['side']
-        price = float(order['price'])
+        price = order['price']
         try:
             open_order = exchange.fetchOrder(order_id, symbol)
             filled = float(open_order['filled'])
             remaining = float(open_order['remaining'])
             fee = float(open_order['fee']['cost'])
-            average = float(open_order['average'])
+            average = open_order['average']
             status = open_order['status']
             if side == 'buy': # Make sure we don't change buy side until we close the sell.
-                db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
+
+                db.update({ 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
             else:
                 # Handle compounding on sell
                 if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
@@ -661,11 +606,6 @@ if bot:
     t_worker.daemon = True
     t_worker.start()
 
-# Start websocket thread
-worker = Thread(target=ws_daemon, args=())
-worker.daemon = True
-worker.start()
-
 def main():
     global buy_percent
     global spend_dollars
@@ -737,10 +677,7 @@ def main():
         check_unfilled_orders() # Update open orders
         if not daemon:
             print(print_orders(last_run))
-        if ws_status == 'Up':
-            time.sleep(0.25)
-        else:
-            time.sleep(1)
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()
