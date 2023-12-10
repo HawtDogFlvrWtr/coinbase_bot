@@ -214,7 +214,7 @@ def telegram_bot():
                     menu.add_row([k, command_list[k]])
                 bot.reply_to(message, '<pre>%s</pre>' % menu, parse_mode='html')
 
-            @bot.message_handler(commands=['rsi'])
+            @bot.message_handler(commands=['r'])
             def handle_rsi_buy_lt(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_rsi_buy_lt = int(message.text.split(" ")[1])
@@ -228,7 +228,7 @@ def telegram_bot():
                     rsi_buy_lt = tele_rsi_buy_lt
                     update_config('bot-config', 'rsi_buy_lt', tele_rsi_buy_lt)
 
-            @bot.message_handler(commands=['tp'])
+            @bot.message_handler(commands=['t'])
             def handle_take_profit(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_take_profit = float(message.text.split(" ")[1])
@@ -268,7 +268,7 @@ def telegram_bot():
                     spend_dollars = float(tele_spend_dollars)
                     update_config('spend-config', 'spend_dollars', spend_dollars)
 
-            @bot.message_handler(commands=['bp'])
+            @bot.message_handler(commands=['b'])
             def handle_buy_percent(message):
                 bot.send_chat_action(message.chat.id, 'typing')
                 tele_buy_percent = float(message.text.split(" ")[1])
