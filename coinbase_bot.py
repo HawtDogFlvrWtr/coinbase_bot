@@ -291,7 +291,7 @@ def telegram_bot():
                 eta = status_pull['eta']
                 url = status_pull['url']
                 online_checksum = get_online_checksum()[0:5]
-                string = '-General Info-\nBot start time: %s\nMy Version: %s\nLatest Version: %s\nPublic IP: %s\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\n\n-Exchange Info-\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, current_checksum[0:5], online_checksum[0:5], ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nMy Version: %s\nLatest Version: %s\nPublic IP: %s\n\n-Exchange Info-\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, current_checksum[0:5], online_checksum[0:5], ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
 
             @bot.message_handler(commands=['o'])
