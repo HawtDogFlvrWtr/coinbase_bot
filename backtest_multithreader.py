@@ -23,20 +23,21 @@ def do_stuff(q):
         new_name = get_item.replace(':', '-')
         print(new_name)
         b = split_item[0]
-        s = split_item[1]
-        tp = split_item[2]
-        sl = split_item[3]
-        epoch = split_item[4]
-        process = subprocess.Popen('python3 coinbase_bot_backtester.py -rb %s -rs %s -t %s -sl %s -s %s >> backtesting_logs/%s.log' % (b,s,tp,sl,epoch,new_name), shell=True)
+        tp = split_item[1]
+        sl = split_item[2]
+        epoch = split_item[3]
+        process = subprocess.Popen('python3 coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s >> backtesting_logs/%s.log' % (b,tp,sl,epoch,new_name), shell=True)
         process.wait()
         q.task_done()
-
+iter = 0
 for b in range(30,105,5): # Buy rsi starting at 30 because we got nothing before that
-  for s in range(0,85,5): # Sell rsi end at 81 because we got nothing after that
-    for tp in range(5,35,5): # Take Profit
-      for sl in range(5,35,5): # Stoploss
-        for epoch in start_times:
-          q.put("%s:%s:%s:%s:%s" % (b,s,tp,sl,epoch))
+  for tp in range(5,35,5): # Take Profit
+    for sl in range(5,35,5): # Stoploss
+      for epoch in start_times:
+        q.put("%s:%s:%s:%s" % (b,tp,sl,epoch))
+        iter += 1
+
+print("%s total jobs queued" % iter)
 
 for i in range(num_threads):
   worker = Thread(target=do_stuff, args=(q,))
