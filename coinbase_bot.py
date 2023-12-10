@@ -482,8 +482,7 @@ def check_unfilled_orders():
             average = open_order['average']
             status = open_order['status']
             if side == 'buy': # Make sure we don't change buy side until we close the sell.
-
-                db.update({ 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
+                db.update({ 'status': 'buy_open', 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
             else:
                 # Handle compounding on sell
                 if remaining == 0 and filled > 0 and fee > 0 and compound_spending == 'True' and side == 'sell':
