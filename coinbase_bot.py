@@ -612,6 +612,7 @@ def main():
     global last_checksum
     global current_checksum
     last_run = None
+    first_run = True
     while True:
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
@@ -631,6 +632,8 @@ def main():
                 last_timetamp = df['timestamp'].iloc[-1] / 1000
                 note_timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
                 current_price = get_current_price(symbol)
+                if first_run: # Don't attempt to buy on the first run, in case the bot crashed.
+                    continue
                 # Buy
                 if macd > signal and macd_last < signal_last and rsi <= rsi_buy_lt:
                     if allow_duplicates == 'False' and open_order_count(symbol) > 0: # Prevent duplicate coin
@@ -642,14 +645,13 @@ def main():
                     if buy_when_higher == 'False' and last_order_buy_price(symbol) > get_current_price(symbol): # Don't buy if we paid more for the last order
                         add_note('%s - Skipping buy of symbol %s because a previous buy was at a lower price.' % (note_timestamp, symbol))
                         continue
-                    # Check for an order that fired at on the same epoch and symbol
-                    if not search_open_duplicate_timestamp(symbol, last_timetamp): 
-                        # DO BUY
-                        buy_amount = max_order_amount / current_price
-                        buy_attempt = attempt_buy(time.time(), note_timestamp, buy_amount, symbol, current_price)
-                        if buy_attempt != False:
-                            add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
+                    # DO BUY
+                    buy_amount = max_order_amount / current_price
+                    buy_attempt = attempt_buy(time.time(), note_timestamp, buy_amount, symbol, current_price)
+                    if buy_attempt != False:
+                        add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
             last_run = last_timetamp # last timestamp in the data we got
+            first_run = False
             # Check for stoploss and take profit on the timeframe
             buy_orders = search_order()
             for buy_order in buy_orders:
