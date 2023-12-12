@@ -409,9 +409,9 @@ def print_orders(last_run = None):
     for order in order_list:
         symbol = order['symbol']
         split_symbol = symbol.split('/')
-        buy_price = order['price']
+        buy_price = float(order['price'])
         buy_amount = order['amount']
-        amount_spent = buy_price * buy_amount
+        amount_spent = buy_price * float(buy_amount)
         status = order['status']
         side = order['side']
         current_price = get_current_price(symbol)
@@ -511,7 +511,7 @@ def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
     formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
         buy_return = exchange.createOrder(symbol, 'limit', 'buy', formatted_amount, formatted_price, { 'clientOrderId': "%s-%s-buy" % (buy_time, symbol) })
-        insert_order('buy_open', symbol, buy_amount, time.time(), note_timestamp, current_price, buy_return['id'], 'buy', buy_return['average'], 'limit', buy_return['filled'], buy_return['remaining'], buy_return['fee'])
+        insert_order('buy_open', symbol, float(formatted_amount), time.time(), note_timestamp, float(formatted_price), buy_return['id'], 'buy', buy_return['average'], 'limit', buy_return['filled'], buy_return['remaining'], buy_return['fee'])
         return buy_return
     except ccxt.InsufficientFunds as e:
         exchange_issues += 1
@@ -552,9 +552,9 @@ def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_
     global compound_spending
     global spend_dollars
     formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
-    current_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
+    formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
-        sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, current_price)
+        sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, formatted_price)
         # Handle compounding
         if sell_return['remaining'] == 0 and sell_return['filled'] > 0 and sell_return['fee'] > 0 and compound_spending == 'True':
             buy_orders = db.search(Orders.order_id == buy_id)
@@ -563,7 +563,7 @@ def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_
                 sell_total = math.floor((float(current_price) * float(sell_return['filled'])) - float(sell_return['fee']))
                 spend_dollars = spend_dollars + (sell_total - buy_total)
                 update_config('spend-config', 'spend_dollars', spend_dollars)
-        insert_order(sell_return['status'], symbol, buy_amount, time.time(), note_timestamp, current_price, sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
+        insert_order(sell_return['status'], symbol, float(formatted_amount), time.time(), note_timestamp, float(formatted_price), sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
         update_order(buy_id, 'closed') # Mark old buy as closed
         return sell_return
     except ccxt.InsufficientFunds as e:
