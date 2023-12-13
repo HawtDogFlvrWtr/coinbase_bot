@@ -446,6 +446,8 @@ def get_current_price(symbol):
         try:
             tickers = exchange.fetch_tickers()
             for ticker in tickers:
+                if ticker not in symbols: # Don't store coins we don't care about
+                    continue
                 timestamp = time.time()
                 current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
             current_price = current_prices[symbol]['price']
@@ -461,6 +463,7 @@ def get_current_price(symbol):
         except ccxt.ExchangeError as e:
             exchange_issues += 1
         except TypeError as e:
+            pass
             exchange_issues += 1
 
 # Update orders that aren't closed or have currency left for purchase
