@@ -19,20 +19,21 @@ from websocket import create_connection, WebSocketConnectionClosedException # we
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='coinbase_bot_bt.json')
+# Get 2 weeks ago
+dt_now = datetime.datetime.now()
+current_time = datetime.datetime(dt_now.year, dt_now.month, dt_now.day, dt_now.hour, 0, 0)
+start_time = round((current_time - datetime.datetime(1970,1,1)).total_seconds() - 1209600)
+
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
-parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=1672531200)
+parser.add_argument('-s', '--start_time', help="The start time for backtesting", type=int, default=start_time)
 parser.add_argument('-rb', '--rsi_buy_lt', help="The start time for backtesting", type=int, default=50)
-parser.add_argument('-rs', '--rsi_sell_gt', help="The start time for backtesting", type=int, default=50)
 parser.add_argument('-t', '--take_profit', help="The start time for backtesting", type=int, default=5)
 parser.add_argument('-sl', '--stoploss_percent', help="The start time for backtesting", type=int, default=10)
 
 args = parser.parse_args()
-orders_json_filename = args.orders_file
 config_file = args.config_file
 since_start = args.start_time
 rsi_buy_lt = args.rsi_buy_lt
-rsi_sell_gt = args.rsi_sell_gt
 take_profit = args.take_profit
 stoploss_percent = -abs(args.stoploss_percent)
 sleep_lookup = {'1m': 60, '1h': 3600, '1d': 86400} # Added second to give the exchange time to update the candles
@@ -43,8 +44,8 @@ config.read(config_file)
 api_key = config.get('api-config', 'api_key')
 secret = config.get('api-config', 'secret')
 timeframe = config.get('bot-config', 'timeframe')
-spend_dollars = int(config.get('spend-config', 'spend_dollars'))
-buy_percent = int(config.get('spend-config', 'buy_percent'))
+spend_dollars = float(config.get('spend-config', 'spend_dollars'))
+buy_percent = float(config.get('spend-config', 'buy_percent'))
 symbols = json.loads(config.get('bot-config', 'symbols'))
 buy_when_higher = config.get('bot-config', 'buy_when_higher')
 
@@ -207,13 +208,14 @@ def main():
                 last_profit = sum(profit_list)
             if sum(profit_list) <= -100: # Bot Failed
                 print("Backtesting finished")
-                print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, -100))
+                print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, -100))
                 sys.exit(0)
         since_start = int(since_start + sleep_lookup[timeframe])
         time.sleep(0.001)
         if since_start > time.time():
             print("Backtesting finished")
-            print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s/S-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, rsi_sell_gt, round(sum(profit_list), 2)))
+            
+            print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, round(sum(profit_list), 2)))
             sys.exit(0)
 
 if __name__ == "__main__":
