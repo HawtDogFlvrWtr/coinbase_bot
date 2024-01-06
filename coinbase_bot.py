@@ -49,7 +49,7 @@ telegram_key = config.get('api-config', 'telegram_key')
 telegram_userid = config.get('api-config', 'telegram_userid')
 
 # Spending Config
-spend_dollars = int(config.get('spend-config', 'spend_dollars'))
+spend_dollars = float(config.get('spend-config', 'spend_dollars'))
 buy_percent = int(config.get('spend-config', 'buy_percent'))
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 compound_spending = config.get('spend-config', 'compound_spending')
@@ -58,6 +58,7 @@ compound_spending = config.get('spend-config', 'compound_spending')
 timeframe = config.get('bot-config', 'timeframe')
 symbols = json.loads(config.get('bot-config', 'symbols'))
 stoploss_percent = float(json.loads(config.get('bot-config', 'stoploss_percent')))
+use_backtest_settings = config.get('bot-config', 'use_backtest_settings')
 if stoploss_percent > 0:
     print("Your stoploss_percent setting in your config is a positive number. Please set it to a negative number. Ex: -20")
     sys.exit()
@@ -235,14 +236,18 @@ def telegram_bot():
                 if not ip_address:
                     ip_address = 'unknown'
                 bot.send_chat_action(message.chat.id, 'typing')
-                status_pull = exchange.fetchStatus()
-                status = status_pull['status']
-                eta = status_pull['eta']
-                url = status_pull['url']
+                try:
+                    status_pull = exchange.fetchStatus()
+                    status = status_pull['status']
+                    eta = status_pull['eta']
+                    url = status_pull['url']
+                except:
+                    status = 'Unsupported'
+                    eta = 'Unsupported'
+                    url = 'Unsupported'
                 online_checksum = get_online_checksum()[0:5]
-                string = '-General Info-\nBot start time: %s\nMy Version: %s\nLatest Version: %s\nPublic IP: %s\n\n-Exchange Info-\nWebsocket %s\nWebsocket reconnects: %s\nExchange reconnects: %s\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, current_checksum[0:5], online_checksum[0:5], ip_address, ws_status, ws_restarts, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
+                string = '-General Info-\nBot start time: %s\nMy Version: %s\nLatest Version: %s\nPublic IP: %s\n\n-Exchange Info-\nExchange reconnects: %s\nExchange Status: %s\nExchange Res. ETA: %s\nExchange Issue URL: %s\n\n-Spend Config-\nSpend Dollars: %s\nBuy Percent: %s\n\n-Bot Config-\nBuy RSI LT: %s\nTake Profit: %s\nStoploss: %s' % (start_time, current_checksum[0:5], online_checksum[0:5], ip_address, exchange_issues, status, eta, url, spend_dollars, buy_percent, rsi_buy_lt, take_profit, stoploss_percent)
                 bot.reply_to(message, string)
-
             @bot.message_handler(commands=['o'])
             def handle_orders(message):
                 bot.send_chat_action(message.chat.id, 'typing')
@@ -397,6 +402,7 @@ def macd_signals(df):
 def print_orders(last_run = None):
     global current_prices
     global ws_status
+    price_dict = {}
     if not last_run:
         t = PrettyTable(['Sym.', 'S.', 'Cur. Price', 'P%', 'Time'])
     else:
@@ -414,7 +420,12 @@ def print_orders(last_run = None):
         amount_spent = buy_price * float(buy_amount)
         status = order['status']
         side = order['side']
-        current_price = get_current_price(symbol)
+        # Handle duplicate coins.. don't need to get the price again.
+        if symbol in price_dict:
+            current_price = price_dict[symbol]
+        else:
+            current_price = get_current_price(symbol)
+            price_dict[symbol] = current_price
         ts = datetime.datetime.fromtimestamp(order['timestamp']).strftime('%m-%d-%Y %H:%M')
         p_l_a = (current_price - buy_price)
         p_l_p = round((p_l_a / buy_price) * 100, 2)
@@ -617,6 +628,16 @@ def main():
     last_run = None
     first_run = True
     while True:
+        # Check backtest settings and load them
+        if use_backtest_settings == 'True' and os.path.isfile('optimal_settings.json'):
+            with open('optimal_settings.json', 'r') as bt_json:
+                settings = json.load(bt_json)
+                for item in settings:
+                    current_val = config.get('bot-config', item)
+                    if config.get('bot-config', item) != settings[item]:
+                        add_note('Automatically updated %s to %s to backtested settings' % (item, settings[item]))
+                        update_config('bot-config', item, settings[item])
+            os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
             for symbol in symbols:

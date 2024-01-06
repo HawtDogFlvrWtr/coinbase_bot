@@ -45,6 +45,9 @@ rsi_buy_lt = 50
 # This will prevent buying additional of the same symbol if the price is higher than the previous buy if set to False. Default: True
 buy_when_higher = True
 
+# Enable this setting to have the bot use the settings provided by backtest_multithreader.py. You should set it up to run at midnight each night automatically
+use_backtest_settings = False
+
 # Symbols to watch. The more symbols, the longer the bot will take. Symbols should be wrapped in double quotes (") to be json compliant.
 # There are issues with tokens well below 1 penny, so we suggest you stay away from SHIB for now.
 symbols: ["BTC/USD","ETH/USD","SOL/USD","LINK/USD","DOGE/USD","XRP/USD","AVAX/USD"]

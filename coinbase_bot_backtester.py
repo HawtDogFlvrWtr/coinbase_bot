@@ -33,6 +33,7 @@ parser.add_argument('-sl', '--stoploss_percent', help="The start time for backte
 args = parser.parse_args()
 config_file = args.config_file
 since_start = args.start_time
+orig_since_start = since_start
 rsi_buy_lt = args.rsi_buy_lt
 take_profit = args.take_profit
 stoploss_percent = -abs(args.stoploss_percent)
@@ -57,6 +58,22 @@ max_orders = int(spend_dollars / max_order_amount)
 
 db = TinyDB(storage=MemoryStorage)
 Orders = Query()
+
+def write_json(since_start, start_time, take_profit, stoploss, buy_percent, spend_dollars, buy_when_higher, rsi_buy_lt, profit):
+    if not os.path.exists("backtesting_json"):
+        os.makedirs("backtesting_json")
+    start_time = datetime.datetime.fromtimestamp(since_start).strftime('%m-%d-%Y %H:%M:%S')
+    output_json = {
+        'start_date': start_time,
+        'start_epoch': since_start,
+        'take_profit': take_profit,
+        'stop_loss': stoploss,
+        'buy_rsi': rsi_buy_lt,
+        'profit': profit
+    }
+    filename = "%s-%s%s-%s.json" % (since_start, take_profit, stoploss, rsi_buy_lt)
+    with open("backtesting_json/%s" % filename, "w") as outfile:
+        outfile.write(json.dumps(output_json, indent=4))
 
 def insert_order(status, symbol, buy_amount, buy_time, signal_time, buy_price):
     db.insert({'order_id': uuid.uuid4(), 'symbol': symbol, 'status': status, 'buy_amount': buy_amount, 'buy_time': buy_time, 'signal_time': signal_time, 'buy_price': buy_price, 'sell_price': 0, 'sell_profit': 0, 'sell_time': 0})
@@ -208,13 +225,14 @@ def main():
                 last_profit = sum(profit_list)
             if sum(profit_list) <= -100: # Bot Failed
                 print("Backtesting finished")
+                write_json(orig_since_start, start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, buy_when_higher, rsi_buy_lt, sum(profit_list))
                 print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, -100))
                 sys.exit(0)
         since_start = int(since_start + sleep_lookup[timeframe])
-        time.sleep(0.001)
+        #time.sleep(0.001)
         if since_start > time.time():
             print("Backtesting finished")
-            
+            write_json(orig_since_start, start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, buy_when_higher, rsi_buy_lt, sum(profit_list))
             print("StartDate %s, TakeProfit %s%%, Stoploss %s%%, Buy Percent %s%%, Spend Dollars %s, Duplicates %s, Buy Higher %s, RSI B-%s, Profit %s%%" % (start_time, take_profit, stoploss_percent, buy_percent, spend_dollars, allow_duplicates, buy_when_higher, rsi_buy_lt, round(sum(profit_list), 2)))
             sys.exit(0)
 
