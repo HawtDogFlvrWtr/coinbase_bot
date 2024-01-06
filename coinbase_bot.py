@@ -635,7 +635,7 @@ def main():
                 for item in settings:
                     current_val = config.get('bot-config', item)
                     if config.get('bot-config', item) != settings[item]:
-                        add_note('Automatically updated %s to %s to backtested settings' % (item, settings[item]))
+                        add_note('Automatically updated setting %s to %s based on backtesting.' % (item, settings[item]))
                         update_config('bot-config', item, settings[item])
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
