@@ -1,4 +1,5 @@
 # Rename to config.cfg and update your api info below
+# BE SURE YOUR SYSTEM TIME IS ACCURATE OR YOU WILL GET UNAUTHORIZED ERRORS!!!
 
 [api-config]
 api_key = xxxxxxxxxxxxxxxx
