@@ -16,6 +16,7 @@ from prettytable import PrettyTable
 from tinydb import TinyDB, Query
 from threading import Thread
 import telebot
+import ntplib
 from websocket import create_connection, WebSocketConnectionClosedException # websocket-client
 
 parser = argparse.ArgumentParser()
@@ -23,7 +24,16 @@ parser.add_argument('-o', '--orders_file', help="The json filename for the order
 parser.add_argument('-c', '--config_file', help="The name of your config file", default='config.cfg')
 parser.add_argument('-d', '--daemon', help="Running this bot in daemon mode shows no display on the console for privacy.", action='store_true')
 
-
+# Check if we have the correct time before doing anything.
+# Coinbase has a 30 second delta limit for authentication
+client = ntplib.NTPClient()
+response = client.request('pool.ntp.org')
+ntp_time = response.tx_time
+my_time = time.time()
+delta = int(my_time - ntp_time)
+if delta > 30 or delta < -30:
+    print("\033[0;31;40mYour time is skewed by greater than 30 seconds (%s seconds). Please update your system time and try again\033[0m" % delta)
+    sys.exit()
 
 # Argument setup
 args = parser.parse_args()
@@ -36,7 +46,7 @@ start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:
 # Notice
 if not daemon:
     print('\033[0;31;40mI have made every attempt to ensure the accuracy and reliability of this application.\nHowever, this application is provided "as is" without warranty or support of any kind.\nI do not accept any responsibility or liability for the accuracy, content, completeness,\nlegality, or reliability of this application. Donations are welcome but doing so does not\nprovide you support for this project.\n\nBTC Wallet: 3CyQ5LW9Ycuuu8Ddr5de5goWRh95C4rN8E\nETH Wallet: 0x7eBEe95Af86Ed7f4B0eD29A322F1b811AD61DF36\nSHIB Wallet: 0x8cCc65a7786Bd5bf74E884712FF55C63b36B0112\n\nUse this application at your own risk.\033[0m')
-    time.sleep(5)
+    time.sleep(2)
 
 # Config File Settings
 config = configparser.ConfigParser()
