@@ -132,8 +132,7 @@ def update_config(section, setting, value):
     config.read(config_file)
     config.set(section, setting, str(value))
     with open(config_file, 'w') as configfile:
-        config.write(configfile)
-        
+        config.write(configfile)      
 
 # Daemons Start
 def telegram_bot():
@@ -623,6 +622,8 @@ def main():
     global buy_percent
     global spend_dollars
     global rsi_buy_lt
+    global take_profit
+    global stoploss_percent
     global last_checksum
     global current_checksum
     last_run = None
@@ -633,10 +634,15 @@ def main():
             with open('optimal_settings.json', 'r') as bt_json:
                 settings = json.load(bt_json)
                 for item in settings:
-                    current_val = config.get('bot-config', item)
                     if config.get('bot-config', item) != settings[item]:
                         add_note('Automatically updated setting %s to %s based on backtesting.' % (item, settings[item]))
                         update_config('bot-config', item, settings[item])
+                        if item == 'rsi_buy_lt':
+                            rsi_buy_lt = settings[item]
+                        elif item == 'take_profit':
+                            take_profit = settings[item]
+                        elif item == 'stoploss_percent':
+                            stoploss_percent = settings[item]
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
