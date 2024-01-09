@@ -184,7 +184,7 @@ def telegram_bot():
                 else:
                     bot.reply_to(message, "Setting Buy RSI to %s" % tele_rsi_buy_lt)
                     global rsi_buy_lt
-                    rsi_buy_lt = tele_rsi_buy_lt
+                    rsi_buy_lt = int(tele_rsi_buy_lt)
                     update_config('bot-config', 'rsi_buy_lt', tele_rsi_buy_lt)
 
             @bot.message_handler(commands=['t'])
@@ -648,11 +648,11 @@ def main():
                         add_note('Automatically updated setting %s to %s based on backtesting.' % (item, settings[item]))
                         update_config('bot-config', item, settings[item])
                         if item == 'rsi_buy_lt':
-                            rsi_buy_lt = settings[item]
+                            rsi_buy_lt = int(settings[item])
                         elif item == 'take_profit':
-                            take_profit = settings[item]
+                            take_profit = float(settings[item])
                         elif item == 'stoploss_percent':
-                            stoploss_percent = settings[item]
+                            stoploss_percent = float(settings[item])
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
@@ -703,11 +703,11 @@ def main():
                 buy_price = buy_order['price']
                 buy_amount = buy_order['amount']
                 profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                if int(profit) <= stoploss_percent: # Stoploss
+                if int(profit) <= float(stoploss_percent): # Stoploss
                     sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
                     if sell_attempt != False:
                         add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                if int(profit) >= take_profit: # Take Profit
+                if int(profit) >= float(take_profit): # Take Profit
                     sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
                     if sell_attempt != False:
                         add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
