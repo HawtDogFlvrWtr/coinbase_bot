@@ -106,7 +106,11 @@ output_json = {
     'stoploss_percent': stop_loss,
     'rsi_buy_lt': buy_rsi,
 }
-print("Highest Average is settings take_profit: %s, stop_loss: %s, buy_rsi: %s with %s profit" % (take_profit, stop_loss, buy_rsi, round(highest_average,2)))
+highest_average_value = round(highest_average,2)
+print("Highest Average is settings take_profit: %s, stop_loss: %s, buy_rsi: %s with %s profit" % (take_profit, stop_loss, buy_rsi, highest_average_value))
+if highest_average_value <= 0:
+  print("Not making changes as our profit was <= 0")
+  sys.exit()
 # Output settings file for the bot.
 with open("optimal_settings.json", "w") as outfile:
     outfile.write(json.dumps(output_json, indent=4))
