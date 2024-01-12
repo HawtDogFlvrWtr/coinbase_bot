@@ -34,7 +34,7 @@ args = parser.parse_args()
 start_times = args.start_times.split(",")
 
 num_threads = args.threads
-update = subprocess.Popen('python ./download_backtest_data.py')
+update = subprocess.Popen('python3 ./download_backtest_data.py')
 update.wait()
 
 # Start service
@@ -48,7 +48,7 @@ def do_stuff(q):
         tp = split_item[1]
         sl = split_item[2]
         epoch = split_item[3]
-        process = subprocess.Popen('python ./coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s' % (b,tp,sl,epoch), shell=True)
+        process = subprocess.Popen('python3 ./coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s' % (b,tp,sl,epoch), shell=True)
         #process = subprocess.Popen('python .\coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s >> backtesting_logs/%s.log' % (b,tp,sl,epoch,new_name), shell=True)
         process.wait()
         q.task_done()
