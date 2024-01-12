@@ -27,14 +27,16 @@ default = "%s,%s,%s,%s" % (start_time_1wk, start_time_2wk, start_time_3wk, start
 # Setup
 q = Queue(maxsize=0)
 parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
 parser.add_argument('-s', '--start_times', help="The start times for backtesting in epoch, comma separated", default="%s,%s,%s,%s" % (start_time_1wk, start_time_2wk, start_time_3wk, start_time_4wk) )
+parser.add_argument('-e', '--end_time', help="The end time for backtesting", type=int, default=time.time())
 parser.add_argument('-t', '--threads', help="The number of threads to use", type=int, default=10)
 
 args = parser.parse_args()
 start_times = args.start_times.split(",")
 
 num_threads = args.threads
-update = subprocess.Popen('python3 ./download_backtest_data.py')
+update = subprocess.Popen('python3 download_backtest_data.py', shell=True)
 update.wait()
 
 # Start service
@@ -43,13 +45,11 @@ def do_stuff(q):
     get_item = q.get()
     if get_item:
         split_item = get_item.split(':')
-        new_name = get_item.replace(':', '-')
         b = split_item[0]
         tp = split_item[1]
         sl = split_item[2]
         epoch = split_item[3]
-        process = subprocess.Popen('python3 ./coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s' % (b,tp,sl,epoch), shell=True)
-        #process = subprocess.Popen('python .\coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s >> backtesting_logs/%s.log' % (b,tp,sl,epoch,new_name), shell=True)
+        process = subprocess.Popen('python3 coinbase_bot_backtester.py -rb %s -t %s -sl %s -s %s' % (b,tp,sl,epoch), shell=True)
         process.wait()
         q.task_done()
 iter = 0
