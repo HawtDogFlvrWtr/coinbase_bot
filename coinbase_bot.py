@@ -60,7 +60,7 @@ telegram_userid = config.get('api-config', 'telegram_userid')
 
 # Spending Config
 spend_dollars = float(config.get('spend-config', 'spend_dollars'))
-buy_percent = int(config.get('spend-config', 'buy_percent'))
+buy_percent = float(config.get('spend-config', 'buy_percent'))
 allow_duplicates = config.get('spend-config', 'allow_duplicates')
 compound_spending = config.get('spend-config', 'compound_spending')
 
@@ -234,10 +234,10 @@ def telegram_bot():
                 if not isinstance(tele_buy_percent, float) or tele_buy_percent == 0:
                     bot.reply_to(message, "%s doesn't appear to be an integer" % tele_buy_percent)
                 else:
-                    bot.reply_to(message, "Setting SpendDollars to %s" % tele_buy_percent)
+                    bot.reply_to(message, "Setting Buy Percent to %s" % tele_buy_percent)
                     global buy_percent
                     buy_percent = float(tele_buy_percent)
-                    update_config('spend-config', 'buy_percent', stoploss_percent)
+                    update_config('spend-config', 'buy_percent', buy_percent)
 
             @bot.message_handler(commands=['s'])
             def handle_status(message):
@@ -656,6 +656,25 @@ def main():
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
+            # Check for stoploss and take profit on the timeframe
+            buy_orders = search_order()
+            for buy_order in buy_orders:
+                if buy_order['status'] != 'buy_open':
+                    continue
+                symbol = buy_order['symbol']
+                current_price = get_current_price(symbol)
+                order_id = buy_order['order_id']
+                buy_price = buy_order['price']
+                buy_amount = buy_order['amount']
+                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
+                if int(profit) <= float(stoploss_percent): # Stoploss
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
+                    if sell_attempt != False:
+                        add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+                if int(profit) >= float(take_profit): # Take Profit
+                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
+                    if sell_attempt != False:
+                        add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
             for symbol in symbols:
                 # FOR DEBUG
                 #add_note("Checking %s at %s" % (symbol, time.time()))
@@ -692,25 +711,6 @@ def main():
                         add_note('%s - Buying %s %s at %s.' % (note_timestamp, buy_amount, symbol, current_price))
             last_run = last_timetamp # last timestamp in the data we got
             first_run = False
-            # Check for stoploss and take profit on the timeframe
-            buy_orders = search_order()
-            for buy_order in buy_orders:
-                if buy_order['status'] != 'buy_open':
-                    continue
-                symbol = buy_order['symbol']
-                current_price = get_current_price(symbol)
-                order_id = buy_order['order_id']
-                buy_price = buy_order['price']
-                buy_amount = buy_order['amount']
-                profit = round(((current_price - buy_price) / buy_price) * 100, 2)
-                if int(profit) <= float(stoploss_percent): # Stoploss
-                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
-                    if sell_attempt != False:
-                        add_note('%s - STOPLOSS Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
-                if int(profit) >= float(take_profit): # Take Profit
-                    sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
-                    if sell_attempt != False:
-                        add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
             online_checksum = get_online_checksum() # Lets see if there is a new version
             if online_checksum and online_checksum != current_checksum and online_checksum != last_checksum:
                 add_note("%s - There is a new version (%s) of this bot available." % (note_timestamp, online_checksum[0:5]))
