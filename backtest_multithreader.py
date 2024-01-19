@@ -15,7 +15,7 @@ import pandas as pd
 files = glob.glob('backtesting_json/*')
 for f in files:
   os.remove(f)
-
+start_seconds = time.time()
 # Get 2 weeks ago
 dt_now = datetime.datetime.now()
 current_time = datetime.datetime(dt_now.year, dt_now.month, dt_now.day, dt_now.hour, 0, 0)
@@ -24,11 +24,12 @@ start_time_2wk = round((current_time - datetime.datetime(1970,1,1)).total_second
 start_time_3wk = round((current_time - datetime.datetime(1970,1,1)).total_seconds() - 1814400)
 start_time_4wk = round((current_time - datetime.datetime(1970,1,1)).total_seconds() - 2419200)
 default = "%s,%s,%s,%s" % (start_time_1wk, start_time_2wk, start_time_3wk, start_time_4wk)
+
 # Setup
 q = Queue(maxsize=0)
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--config_file', help="The json filename for the orders file", default='config.cfg')
-parser.add_argument('-s', '--start_times', help="The start times for backtesting in epoch, comma separated", default="%s,%s,%s,%s" % (start_time_1wk, start_time_2wk, start_time_3wk, start_time_4wk) )
+parser.add_argument('-s', '--start_times', help="The start times for backtesting in epoch, comma separated", default="%s" % default )
 parser.add_argument('-e', '--end_time', help="The end time for backtesting", type=int, default=time.time())
 parser.add_argument('-t', '--threads', help="The number of threads to use", type=int, default=10)
 
@@ -107,6 +108,8 @@ output_json = {
     'rsi_buy_lt': buy_rsi,
 }
 highest_average_value = round(highest_average,2)
+end_seconds = time.time()
+print("This run took %s seconds to run with %s cores" % (end_seconds - start_seconds, num_threads))
 print("Highest Average is settings take_profit: %s, stop_loss: %s, buy_rsi: %s with %s profit" % (take_profit, stop_loss, buy_rsi, highest_average_value))
 if highest_average_value <= 0:
   print("Not making changes as our profit was <= 0")

@@ -466,8 +466,6 @@ def get_current_price(symbol):
         try:
             tickers = exchange.fetch_tickers()
             for ticker in tickers:
-                if ticker not in symbols: # Don't store coins we don't care about
-                    continue
                 timestamp = time.time()
                 current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
             current_price = current_prices[symbol]['price']
@@ -656,9 +654,10 @@ def main():
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
-            # Check for stoploss and take profit on the timeframe
-            buy_orders = search_order()
-            for buy_order in buy_orders:
+
+            # Check for stoploss and take profit on the timeframe even if we don't have the coin configured anymore
+            open_orders = search_order()
+            for buy_order in open_orders:
                 if buy_order['status'] != 'buy_open':
                     continue
                 symbol = buy_order['symbol']
@@ -675,6 +674,7 @@ def main():
                     sell_attempt = attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, order_id)
                     if sell_attempt != False:
                         add_note('%s - TAKE PROFIT Selling %s %s at %s. Profit: %s' % (note_timestamp, buy_amount, symbol, current_price, profit))
+            # Check for buys against our configed symbols
             for symbol in symbols:
                 # FOR DEBUG
                 #add_note("Checking %s at %s" % (symbol, time.time()))
