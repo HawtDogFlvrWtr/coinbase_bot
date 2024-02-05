@@ -386,22 +386,27 @@ def fetch_ohlcv_data(symbol):
             if debug:
                 print("Exchange Timeout in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+            pass
         except ccxt.DDoSProtection as e:
             if debug:
                 print("Exchange DDOS Protection in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+            pass
         except ccxt.ExchangeNotAvailable as e:
             if debug:
                 print("Exchange Not Available in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+            pass
         except ccxt.NetworkError as e:
             if debug:
                 print("Network Error in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+            pass
         except ccxt.ExchangeError as e:
             if debug:
                 print("Generic Exchange Error in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+            pass
         except TypeError as e:
             if debug:
                 print("Type Error in fetch_ohlcv_data(): %s" % e)
@@ -506,7 +511,6 @@ def get_current_price(symbol):
         except TypeError as e:
             if debug:
                 print("Type Error in get_current_price(): %s" % e)
-            pass
             exchange_issues += 1
 
 # Update orders that aren't closed or have currency left for purchase
@@ -540,14 +544,24 @@ def check_unfilled_orders():
                         update_config('spend-config', 'spend_dollars', spend_dollars)
                 db.update({ 'status': status, 'filled': filled, 'remaining': remaining, 'cost': fee, 'average': average }, Orders.order_id == order_id)
         except ccxt.RequestTimeout as e:
+            if debug:
+                print("Exchange Timeout in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.DDoSProtection as e:
+            if debug:
+                print("Exchange DDOS Protection in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.ExchangeNotAvailable as e:
+            if debug:
+                print("Exchange Not Available in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.NetworkError as e:
+            if debug:
+                print("Network Error in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.ExchangeError as e:
+            if debug:
+                print("Generic Exchange Error in get_current_price(): %s" % e)
             exchange_issues += 1
 
 # Attempt to buy an order
