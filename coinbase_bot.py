@@ -23,6 +23,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-o', '--orders_file', help="The json filename for the orders file", default='cbb_database.json')
 parser.add_argument('-c', '--config_file', help="The name of your config file", default='config.cfg')
 parser.add_argument('-d', '--daemon', help="Running this bot in daemon mode shows no display on the console for privacy.", action='store_true')
+parser.add_argument('-dbg', '--debug', help="Runs the bot in debug mode to print additional information on connection issues.", action='store_true')
+
 
 # Check if we have the correct time before doing anything.
 # Coinbase has a 30 second delta limit for authentication
@@ -40,6 +42,7 @@ args = parser.parse_args()
 orders_json_filename = args.orders_file
 config_file = args.config_file
 daemon = args.daemon
+debug = args.debug
 sleep_lookup = {'1m': 61, '1h': 3660, '1d': 84060} # Added second to give the exchange time to update the candles
 start_time = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
 
@@ -380,20 +383,30 @@ def fetch_ohlcv_data(symbol):
             df = pd.DataFrame(ohlcv_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
             return df
         except ccxt.RequestTimeout as e:
+            if debug:
+                print("Exchange Timeout in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
-            pass
         except ccxt.DDoSProtection as e:
+            if debug:
+                print("Exchange DDOS Protection in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
-            pass
         except ccxt.ExchangeNotAvailable as e:
+            if debug:
+                print("Exchange Not Available in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
-            pass
         except ccxt.NetworkError as e:
+            if debug:
+                print("Network Error in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
-            pass
         except ccxt.ExchangeError as e:
+            if debug:
+                print("Generic Exchange Error in fetch_ohlcv_data(): %s" % e)
             exchange_issues += 1
+        except TypeError as e:
+            if debug:
+                print("Type Error in fetch_ohlcv_data(): %s" % e)
             pass
+            exchange_issues += 1
        
 # Generate macd information for the signals
 def macd_signals(df):
@@ -467,20 +480,32 @@ def get_current_price(symbol):
             tickers = exchange.fetch_tickers()
             for ticker in tickers:
                 timestamp = time.time()
-                current_prices[ticker] = {'price': float(tickers[ticker]['last']), 'timestamp': timestamp}
+                current_prices[ticker] = {'price': tickers[ticker]['last'], 'timestamp': timestamp}
             current_price = current_prices[symbol]['price']
             return current_price
         except ccxt.RequestTimeout as e:
+            if debug:
+                print("Exchange Timeout in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.DDoSProtection as e:
+            if debug:
+                print("Exchange DDOS Protection in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.ExchangeNotAvailable as e:
+            if debug:
+                print("Exchange Not Available in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.NetworkError as e:
+            if debug:
+                print("Network Error in get_current_price(): %s" % e)
             exchange_issues += 1
         except ccxt.ExchangeError as e:
+            if debug:
+                print("Generic Exchange Error in get_current_price(): %s" % e)
             exchange_issues += 1
         except TypeError as e:
+            if debug:
+                print("Type Error in get_current_price(): %s" % e)
             pass
             exchange_issues += 1
 
