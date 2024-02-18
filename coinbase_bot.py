@@ -433,7 +433,7 @@ def print_orders(last_run = None):
     if not last_run:
         t = PrettyTable(['Sym.', 'S.', 'Cur. Price', 'P%', 'Time'])
     else:
-        t = PrettyTable(['Symbol', 'Side', 'Buy Price', 'Current Price', 'P$', 'P%', 'Time'])
+        t = PrettyTable(['Symbol', 'Side', 'Order Price', 'Current Price', 'P$', 'P%', 'Time'])
     R = "\033[0;31;40m" #RED
     G = "\033[0;32;40m" # GREEN
     N = "\033[0m" # Reset
@@ -568,10 +568,9 @@ def check_unfilled_orders():
 def attempt_buy(buy_time, note_timestamp, buy_amount, symbol, current_price):
     global exchange_issues
     formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
-    formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
-        buy_return = exchange.createOrder(symbol, 'limit', 'buy', formatted_amount, formatted_price, { 'clientOrderId': "%s-%s-buy" % (buy_time, symbol) })
-        insert_order('buy_open', symbol, float(formatted_amount), time.time(), note_timestamp, float(formatted_price), buy_return['id'], 'buy', buy_return['average'], 'limit', buy_return['filled'], buy_return['remaining'], buy_return['fee'])
+        buy_return = exchange.createOrder(symbol, 'limit', 'buy', formatted_amount, current_price, { 'clientOrderId': "%s-%s-buy" % (buy_time, symbol) })
+        insert_order('buy_open', symbol, formatted_amount, time.time(), note_timestamp, current_price, buy_return['id'], 'buy', buy_return['average'], 'limit', buy_return['filled'], buy_return['remaining'], buy_return['fee'])
         return buy_return
     except ccxt.InsufficientFunds as e:
         exchange_issues += 1
@@ -612,9 +611,8 @@ def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_
     global compound_spending
     global spend_dollars
     formatted_amount = exchange.amount_to_precision(symbol, buy_amount)
-    formatted_price = str("{:f}".format(current_price)) # Because sometimes coinbase hates small floats
     try:
-        sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, formatted_price)
+        sell_return = exchange.createOrder(symbol, 'limit', 'sell', formatted_amount, current_price)
         # Handle compounding
         if sell_return['remaining'] == 0 and sell_return['filled'] > 0 and sell_return['fee'] > 0 and compound_spending == 'True':
             buy_orders = db.search(Orders.order_id == buy_id)
@@ -623,7 +621,7 @@ def attempt_sell(note_timestamp, buy_amount, symbol, current_price, profit, buy_
                 sell_total = math.floor((float(current_price) * float(sell_return['filled'])) - float(sell_return['fee']))
                 spend_dollars = spend_dollars + (sell_total - buy_total)
                 update_config('spend-config', 'spend_dollars', spend_dollars)
-        insert_order(sell_return['status'], symbol, float(formatted_amount), time.time(), note_timestamp, float(formatted_price), sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
+        insert_order(sell_return['status'], symbol, float(formatted_amount), time.time(), note_timestamp, current_price, sell_return['id'], 'sell', sell_return['average'], 'limit', sell_return['filled'], sell_return['remaining'], sell_return['fee'], buy_id)
         update_order(buy_id, 'closed') # Mark old buy as closed
         return sell_return
     except ccxt.InsufficientFunds as e:
@@ -693,7 +691,7 @@ def main():
             os.remove('optimal_settings.json')
         last_timetamp = time.time() # In case nothing comes through, we set this to now.
         if not last_run or time.time() >= last_run + sleep_lookup[timeframe]: # Determine if we need to refresh
-
+            note_timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
             # Check for stoploss and take profit on the timeframe even if we don't have the coin configured anymore
             open_orders = search_order()
             for buy_order in open_orders:
@@ -728,7 +726,6 @@ def main():
                 signal_last = df['MACDs_12_26_9'].iloc[len(df) - 2]
                 rsi = df['RSI_14'].iloc[-1]
                 last_timetamp = df['timestamp'].iloc[-1] / 1000
-                note_timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y %H:%M:%S')
                 current_price = get_current_price(symbol)
                 if first_run: # Don't attempt to buy on the first run, in case the bot crashed.
                     continue
